@@ -1,28 +1,32 @@
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.1.0/mdb.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-sm navbar-light bg-mint">
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-            <li class="nav-item active">
-                <a class="nav-link" href="./index.html">Recipes</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="./ingredients.html">Ingredients</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="./packaging.html">Packaging</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="./addUpdate.html">Add and Update</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="./settings.html">Settings</a>
-            </li>
-        </ul>
-    </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-mint">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav px-3">
+                <li class="nav-item active">
+                    <a class="nav-link" href="./index.html">Recipes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="./ingredients.html">Ingredients</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="./packaging.html">Packaging</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="./addUpdate.html">Add and Update</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="./settings.html">Settings</a>
+                </li>
+            </ul>
+        </div>
     </nav>
     <div>
         <div class="text-center mt-4"><h2>Recipes</h2></div>
@@ -51,25 +55,33 @@
                 </div>
                 <div class="form-group">
                     <div id="recipeControls">
-                        <div class="form-group">
-                            <input id="newRecipeName" class="form-control" type="text" placeholder="Recipe Name" required="true" disabled>
+                        <div class="form-floating form-group">
+                            <input id="newRecipeName" class="form-control" type="text" placeholder="Name" required="true">
+                            <label for="newRecipeName">Name</label>
                         </div>
                     </div>
                     <div class="form-group text-center">
                         <button id="addRecipeIngredientsBtn" type="button" class="btn btn-success" onclick="addRecipeIngredientControls()"><i class="fa-solid fa-plus"></i></button>
                     </div>
                     <div class="form-row form-group">
-                        <div class="col">
+                        <div class="col form-floating">
+                            <input id="newRecipeServings" type="number" class="form-control" placeholder="Servings" required="true">
+                            <label for="newRecipeServings">Servings</label>
+                        </div>
+                        <div class="col form-floating">
                             <input id="newRecipeTime" type="number" class="form-control" placeholder="Hours" required="true">
+                            <label for="newRecipeTime">Hours</label>
                         </div>
-                        <div class="col" id="newRecipePackagingSelectContainer">
+                        <div class="col form-floating" id="newRecipePackagingSelectContainer">
                         </div>
-                        <div class="col" >
-                            <input id="newRecipePackagingCount" class="form-control" type="number" placeholder="Packaging Count" required="true">
+                        <div class="col form-floating" >
+                            <input id="newRecipePackagingCount" class="form-control" type="number" placeholder="Package Count" required="true">
+                            <label for="newRecipePackagingCount">Package Count</label>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group form-floating">
                         <textarea id="newRecipeNotes" class="form-control" placeholder="Notes..."></textarea>
+                        <label for="newRecipeNotes">Notes...</label>
                     </div>
                 </div>
             </div>
@@ -82,6 +94,7 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.1.0/mdb.umd.min.js"></script>
     <script src="https://kit.fontawesome.com/950a1c7a37.js" crossorigin="anonymous"></script>
     <script src="./scripts.js"></script>
 </body>

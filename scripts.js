@@ -95,30 +95,37 @@ if (document.getElementById('uploadBackup')) {
 
 function createRecipeCard(recipe) {
     const recipeCard = document.createElement('div');
-    recipeCard.className = 'card';
+    recipeCard.className = 'card display-card';
 
     const recipeCardBody = document.createElement('div');
     recipeCardBody.className = 'card-body';
 
-    const recipeCardTitle = document.createElement('h5');
+    const recipeCardTitle = document.createElement('h3');
     recipeCardTitle.className = 'card-title';
     recipeCardTitle.innerText = recipe.name;
     recipeCardBody.appendChild(recipeCardTitle);
 
+    const recipeServings = document.createElement('p');
+    recipeServings.innerText = `${recipe.servings} servings`;
+    recipeServings.className = 'text-muted font-italic';
+    recipeCardBody.appendChild(recipeServings);
+
+    recipe.servings
+
     for (const ingredient of recipe.ingredients) {
         const recipeCardIngredient = document.createElement('p');
-        recipeCardIngredient.innerText = `${ingredient.name} ${ingredient.amount} ${ingredient.unitOfMeasure}`;
+        recipeCardIngredient.innerText = `${ingredient.amount} ${ingredient.unitOfMeasure}(s) of ${ingredient.name}`;
         recipeCardIngredient.className = 'card-text';
         recipeCardBody.appendChild(recipeCardIngredient);
     }
 
     const recipeNotes = document.createElement('p');
-    recipeNotes.innerText = recipe.notes;
+    recipeNotes.innerText = `Notes:\n${recipe.notes}`;
     recipeNotes.className = 'text-muted font-italic';
     recipeCardBody.appendChild(recipeNotes);
 
     const updateButton = document.createElement('button');
-    updateButton.className = 'btn btn-info float-right mr-2';
+    updateButton.className = 'btn btn-info mr-2';
     updateButton.setAttribute('data-toggle', 'modal');
     updateButton.setAttribute('data-target', '#updateModal');
     updateButton.onclick = () => {
@@ -133,7 +140,7 @@ function createRecipeCard(recipe) {
     cardFooter.className = 'card-footer';
 
     const deleteButton = document.createElement('button');
-    deleteButton.className = 'btn btn-danger float-right';
+    deleteButton.className = 'btn btn-danger';
     deleteButton.onclick = () => {
         deleteRecipeByName(recipe.name);
     };
@@ -142,13 +149,20 @@ function createRecipeCard(recipe) {
     deleteIcon.className = 'fa-solid fa-trash';
     deleteButton.appendChild(deleteIcon);
 
-    const recipePriceElement = document.createElement('span');
+    const recipePriceElement = document.createElement('h3');
     recipePriceElement.className = "text-success"
-    recipePriceElement.innerText =`\$${getRecipePrice(recipe.name)}`;
+    const recipePrice = getRecipePrice(recipe.name);
+    recipePriceElement.innerText =`\$${recipePrice}`;
 
-    cardFooter.appendChild(recipePriceElement);
-    cardFooter.appendChild(deleteButton);
+    const recipePricePerServingElement = document.createElement('h6');
+    recipePricePerServingElement.className = "text-success"
+    const recipePricePerServing = (recipePrice / recipe.servings).toFixed(2);
+    recipePricePerServingElement.innerText =`(\$${recipePricePerServing} per serving)`;
+
+    recipeCardBody.appendChild(recipePriceElement);
+    recipeCardBody.appendChild(recipePricePerServingElement);
     cardFooter.appendChild(updateButton);
+    cardFooter.appendChild(deleteButton);
 
     recipeCard.appendChild(recipeCardBody);
     recipeCard.appendChild(cardFooter);
@@ -183,18 +197,18 @@ function displayRecipes() {
 
 function createIngredientCard(ingredient) {
     const ingredientCard = document.createElement('div');
-    ingredientCard.className = 'card';
+    ingredientCard.className = 'card display-card';
 
     const ingredientCardBody = document.createElement('div');
     ingredientCardBody.className = 'card-body';
 
-    const ingredientCardTitle = document.createElement('h5');
+    const ingredientCardTitle = document.createElement('h3');
     ingredientCardTitle.className = 'card-title';
     ingredientCardTitle.innerText = ingredient.name;
     ingredientCardBody.appendChild(ingredientCardTitle);
 
     const ingredientCardInfo = document.createElement('p');
-    ingredientCardInfo.innerText = `${ingredient.amount} ${ingredient.unitOfMeasure} is $${ingredient.cost}`;
+    ingredientCardInfo.innerText = `${ingredient.amount} ${ingredient.unitOfMeasure} for $${ingredient.cost}`;
     ingredientCardInfo.className = 'card-text';
     ingredientCardBody.appendChild(ingredientCardInfo);
 
@@ -202,7 +216,7 @@ function createIngredientCard(ingredient) {
     cardFooter.className = 'card-footer';
 
     const updateButton = document.createElement('button');
-    updateButton.className = 'btn btn-info float-right mr-2';
+    updateButton.className = 'btn btn-info mr-2';
     updateButton.setAttribute('data-toggle', 'modal');
     updateButton.setAttribute('data-target', '#updateModal');
     updateButton.onclick = () => {
@@ -214,7 +228,7 @@ function createIngredientCard(ingredient) {
     updateButton.appendChild(updateIcon);
 
     const deleteButton = document.createElement('button');
-    deleteButton.className = 'btn btn-danger float-right';
+    deleteButton.className = 'btn btn-danger';
     deleteButton.onclick = () => {
         deleteIngredientByName(ingredient.name);
     };
@@ -222,10 +236,9 @@ function createIngredientCard(ingredient) {
     const deleteIcon = document.createElement('i');
     deleteIcon.className = 'fa-solid fa-trash';
     deleteButton.appendChild(deleteIcon);
-
-    cardFooter.appendChild(deleteButton);
+    
     cardFooter.appendChild(updateButton);
-
+    cardFooter.appendChild(deleteButton);
     ingredientCard.appendChild(ingredientCardBody);
     ingredientCard.appendChild(cardFooter);
 
@@ -257,18 +270,18 @@ function displayIngredients() {
 
 function createPackagingCard(packaging) {
     const packagingCard = document.createElement('div');
-    packagingCard.className = 'card';
+    packagingCard.className = 'card display-card';
 
     const packagingCardBody = document.createElement('div');
     packagingCardBody.className = 'card-body';
 
-    const packagingCardTitle = document.createElement('h5');
+    const packagingCardTitle = document.createElement('h3');
     packagingCardTitle.className = 'card-title';
     packagingCardTitle.innerText = packaging.name;
     packagingCardBody.appendChild(packagingCardTitle);
 
     const packagingCardInfo = document.createElement('p');
-    packagingCardInfo.innerText = `${packaging.amount} is $${packaging.cost}`;
+    packagingCardInfo.innerText = `${packaging.amount} for $${packaging.cost}`;
     packagingCardInfo.className = 'card-text';
     packagingCardBody.appendChild(packagingCardInfo);
 
@@ -276,7 +289,7 @@ function createPackagingCard(packaging) {
     cardFooter.className = 'card-footer';
 
     const updateButton = document.createElement('button');
-    updateButton.className = 'btn btn-info float-right mr-2';
+    updateButton.className = 'btn btn-info mr-2';
     updateButton.setAttribute('data-toggle', 'modal');
     updateButton.setAttribute('data-target', '#updateModal');
     updateButton.onclick = () => {
@@ -288,7 +301,7 @@ function createPackagingCard(packaging) {
     updateButton.appendChild(updateIcon);
 
     const deleteButton = document.createElement('button');
-    deleteButton.className = 'btn btn-danger float-right';
+    deleteButton.className = 'btn btn-danger';
     deleteButton.onclick = () => {
         deletePackagingByName(packaging.name);
     };
@@ -297,9 +310,8 @@ function createPackagingCard(packaging) {
     deleteIcon.className = 'fa-solid fa-trash';
     deleteButton.appendChild(deleteIcon);
 
-    cardFooter.appendChild(deleteButton);
     cardFooter.appendChild(updateButton);
-
+    cardFooter.appendChild(deleteButton);
     packagingCard.appendChild(packagingCardBody);
     packagingCard.appendChild(cardFooter);
 
@@ -351,6 +363,7 @@ function addRecipe(e) {
     const recipeName = capitalize(document.getElementById('newRecipeName').value);
     const recipeNotes = document.getElementById('newRecipeNotes').value;
     const recipeTime = document.getElementById('newRecipeTime').value;
+    const recipeServings = document.getElementById('newRecipeServings').value;
     const packagingName = capitalize(document.getElementById('newRecipePackagingSelect').value);
     const packagingCount = document.getElementById('newRecipePackagingCount').value;
 
@@ -365,7 +378,7 @@ function addRecipe(e) {
     }
     const recipeIngredientsString = recipeIngredients.join('').slice(0, -1);
 
-    const recipe = `{"name":"${recipeName}","ingredients":[${recipeIngredientsString}],"notes":"${recipeNotes}","time":"${recipeTime}","packagingName":"${packagingName}","packagingCount":"${packagingCount}"}`;
+    const recipe = `{"name":"${recipeName}","ingredients":[${recipeIngredientsString}],"notes":"${recipeNotes}","time":"${recipeTime}","packagingName":"${packagingName}","packagingCount":"${packagingCount}","servings":"${recipeServings}"}`;
 
     const recipeExists = recipes.some((recipeItem) => JSON.parse(recipeItem).name === recipeName);
 
@@ -392,6 +405,7 @@ function createUnitOfMeasurementDropdown() {
     const select = document.createElement('select');
     select.className = 'form-control';
     select.id = 'newIngredientUnitOfMeasure';
+    select.placeholder = "Measure";
 
     const addOption = (value, text) => {
         const option = document.createElement('option');
@@ -420,12 +434,17 @@ function addUnitOfMeasureToIngredientControls() {
     const col = document.createElement('div');
     const ingredientControls = document.getElementById('ingredientControls');
     const newIngredientCostColumn = document.getElementById('newIngredientCostColumn');
-    col.className = 'col';
+    col.className = 'col form-floating';
     
 
     const select = createUnitOfMeasurementDropdown();
     col.appendChild(select);
 
+    const label = document.createElement('label');
+    label.for = select.id;
+    label.innerText = "Measure";
+    col.appendChild(label);
+    
     ingredientControls.insertBefore(col, newIngredientCostColumn);
 }
 
@@ -520,6 +539,7 @@ function updateRecipeByName(recipeName) {
     document.getElementById('updateModalLabel').innerText = `Update ${recipeName}`;
     document.getElementById('newRecipeName').value = recipe.name;
     document.getElementById('newRecipeTime').value = recipe.time;
+    document.getElementById('newRecipeServings').value = recipe.servings;
     document.getElementById('newRecipeNotes').value = recipe.notes;
     document.getElementById('newRecipePackagingSelect').value = recipe.packagingName;
     document.getElementById('newRecipePackagingCount').value = recipe.packagingCount;
@@ -594,18 +614,24 @@ function createIngredientRow(recipeIngredientCount) {
         return divCol;
     };
 
-    const ingredientName = createCol('col');
+    const ingredientName = createCol('col form-floating');
     ingredientName.appendChild(generateIngredientSelect(`ingredientName${recipeIngredientCount}`, `ingredientType${recipeIngredientCount}s`, `ingredientUnitOfMeasureSelect${recipeIngredientCount}`));
+    const ingredientNameLabel = createFloatingLabel(`ingredientName${recipeIngredientCount}`, "Name");
+    ingredientName.appendChild(ingredientNameLabel);
 
-    const ingredientAmount = createCol('col');
+    const ingredientAmount = createCol('col form-floating');
     ingredientAmount.innerHTML = `
-        <input id="ingredientAmount${recipeIngredientCount}" class="form-control" type="number" required placeholder="Ingredient Amount">
+        <input id="ingredientAmount${recipeIngredientCount}" class="form-control" type="number" required placeholder="Amount">
     `;
+    const ingredientAmountLabel = createFloatingLabel(`ingredientAmount${recipeIngredientCount}`, "Amount");
+    ingredientAmount.appendChild(ingredientAmountLabel);
 
-    const ingredientUnitOfMeasure = createCol('col');
+    const ingredientUnitOfMeasure = createCol('col form-floating');
     const select = createUnitOfMeasurementDropdown();
     select.id = `ingredientUnitOfMeasureSelect${recipeIngredientCount}`;
     ingredientUnitOfMeasure.appendChild(select);
+    const ingredientUnitOfMeasureLabel = createFloatingLabel(`ingredientUnitOfMeasureSelect${recipeIngredientCount}`, "Measure");
+    ingredientUnitOfMeasure.appendChild(ingredientUnitOfMeasureLabel);
 
     const deleteRowButton = createCol('col align-self-center');
     deleteRowButton.innerHTML = `
@@ -620,6 +646,13 @@ function createIngredientRow(recipeIngredientCount) {
     divRow.appendChild(deleteRowButton);
 
     return divRow;
+}
+
+function createFloatingLabel(id, text){
+    const label = document.createElement('label');
+    label.for = id;
+    label.innerText = text;
+    return label;
 }
 
 function addRecipeIngredientControls() {
@@ -701,6 +734,7 @@ function populatePackagingSelect() {
     select.className = 'form-control';
     select.id = 'newRecipePackagingSelect';
 
+    const label = createFloatingLabel(select.id, "Packaging")
     // Extract packaging names from the 'packagings' array
     packagings.map((packaging) => {
         const option = document.createElement('option');
@@ -711,6 +745,7 @@ function populatePackagingSelect() {
     });
 
     packagingSelectContainer.appendChild(select);
+    packagingSelectContainer.appendChild(label);
 }
 
 
@@ -718,6 +753,7 @@ function generateIngredientSelect(ingredientNameSelectId, ingredientTypeId, ingr
     const select = document.createElement('select');
     select.className = 'form-control';
     select.id = ingredientNameSelectId;
+    select.placeholder = "Name";
     select.onchange = () => { updateUnitOfMeasurementSelect(ingredientNameSelectId, ingredientTypeId, ingredientUnitOfMeasureSelect) };
 
     // Extract ingredient names from the 'ingredients' array

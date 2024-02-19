@@ -1,11 +1,15 @@
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.1.0/mdb.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-light">
-        <nav class="navbar navbar-expand-sm navbar-light bg-mint">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-mint">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav px-3">
                 <li class="nav-item">
                     <a class="nav-link" href="./index.html">Recipes</a>
                 </li>
@@ -23,7 +27,7 @@
                 </li>
             </ul>
         </div>
-        </nav>
+    </nav>
         
         <div class="text-center mt-4"><h2>Settings</h2></div>
         <div class="container">
@@ -31,17 +35,18 @@
                 <div class="form-group ">
                     <p>Current Hourly Wage: <span class="text-success" id="hourlyWageSpan">$20</span></p>
                     <input type="number" class="form-control w-25 d-inline" placeholder="Hourly Wage" id="hourlyWageInput" required>
-                    <button class="btn btn-success d-inline mb-1" type="submit" id="setHourlyWage" onclick="setHourlyWage();">Set</button>
+                    <button class="btn btn-success d-inline" type="submit" id="setHourlyWage" onclick="setHourlyWage();">Set</button>
                 </div>
                 <div class="form-group">
                     <button type="button" class="btn btn-info" id="save" onclick="save()"><i class="fa-solid fa-file-arrow-down"></i></button>
                     <button type="button" class="btn btn-danger" id="delete" onclick="clearLocalStorage()"><i class="fa-solid fa-ban"></i></button>
                 </div>
 
-                <div id="drop-area">
-                    <form >
-                        <input id="uploadBackup" type="file">
-                    </form>
+                <div class="d-flex justify-content-center ">
+                <div class="custom-file w-50">
+                    <input type="file" class="custom-file-input " id="uploadBackup">
+                    <label class="custom-file-label" for="uploadBackup">Choose file</label>
+                  </div>
                 </div>
                 
             </div>
@@ -50,6 +55,7 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.1.0/mdb.umd.min.js"></script>
     <script src="https://kit.fontawesome.com/950a1c7a37.js" crossorigin="anonymous"></script>
     <script src="./scripts.js"></script>
 </body>
