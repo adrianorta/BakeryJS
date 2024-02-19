@@ -3,9 +3,10 @@
     line-height: 3rem;
 }
 
-.bg-mint {
-    background-color: #3EB489;
-}
+.bg-light {
+    background-color: #ffeff4;
+    background-image: linear-gradient(0deg, #f1fffa 0%, #eefcff 100%);
+    }
 
 .navbar-dark .navbar-toggler-icon {
     background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255, 255, 255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
@@ -14,4 +15,52 @@
 .display-card {
     max-width: 33.4%;
     text-align: center;
+}
+
+.bg-mint {
+    background-color: #3EB489;
+background-image: linear-gradient(160deg, #3EB489 0%, #3ea4b4 100%);
+
+}
+
+h2, h3 {
+    font-family: "Oswald", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-style: normal;
+    font-size: 40pt;
+    color: #113125 !important;
+}
+
+p, h5, input, a {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 16pt;
+}
+
+span, h6, label {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 12pt;
+}
+
+h6.text-success {
+    color: #43a059 !important;
+}
+  
+.bg-custom-dark{
+    background-color: #113125;
+}
+ 
+.bg-custom-light{
+    background-color: #fafffd;
+}
+
+.bg-custom-medium{
+    background-color: #24312c;
 }
