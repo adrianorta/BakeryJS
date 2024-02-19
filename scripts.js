@@ -1,463 +1,520 @@
-if(localStorage.getItem("Recipes") == null){
-    localStorage.setItem("Recipes", "[]");
+const initializeLocalStorageItem = (key, defaultValue) => {
+    if (localStorage.getItem(key) === null) {
+        updateLocalStorage(key, defaultValue);
+    }
+};
+
+function updateLocalStorage(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
 }
 
-if(localStorage.getItem("Ingredients") == null){
-    localStorage.setItem("Ingredients", "[]");
-}
+const confirmAction = (message) => window.confirm(message);
 
-if(localStorage.getItem("Packagings") == null){
-    localStorage.setItem("Packagings", "[]");
-}
+// Initialize local storage items
+initializeLocalStorageItem("Recipes", []);
+initializeLocalStorageItem("Ingredients", []);
+initializeLocalStorageItem("Packagings", []);
+initializeLocalStorageItem("HourlyWage", 10);
 
-if(localStorage.getItem("HourlyWage") == null){
-    localStorage.setItem("HourlyWage", "10");
-}
-
+// Constants for units of measure
 const UnitsOfMeasure = {
-	Cup: "cup",
-	Tablespoon: "tbsp",
-	Teaspoon: "tsp",
-	Ounce: "oz",
-    Pint: "pint",
-    Quart:"quart",
-    Gallon: "gallon",
-    Unit: "unit",
-    Gram: "gram",
-    Pound: "lb",
-    Millileter: "ml"
-}
+    Cup: "Cup",
+    Tablespoon: "Tablespoon",
+    Teaspoon: "Teaspoon",
+    Ounce: "Ounce",
+    Pint: "Pint",
+    Quart: "Quart",
+    Gallon: "Gallon",
+    Unit: "Unit",
+    Gram: "Gram",
+    Pound: "Pound",
+    Milliliter: "Milliliter"
+};
 
+// Retrieve data from local storage
 let recipes = JSON.parse(localStorage.getItem("Recipes"));
 let ingredients = JSON.parse(localStorage.getItem("Ingredients"));
 let packagings = JSON.parse(localStorage.getItem("Packagings"));
-let hourlyWage = localStorage.getItem("HourlyWage");
+let hourlyWage = parseFloat(localStorage.getItem("HourlyWage"));
 let recipeIngredientCount = 0;
+let ingredientsList = [];
 
-if(document.getElementById('addRecipeCard')){
-    addRecipeIngredientControls();
+// UI-related code
+if (document.getElementById("addRecipeCard")) {
+    if(ingredients.length > 0){
+        addRecipeIngredientControls();
+    }
     addUnitOfMeasureToIngredientControls();
-    document.getElementById('addRecipe').onclick = () => { addRecipe();};
-    document.getElementById('addIngredient').onclick = () => { addIngredient();};
-    document.getElementById('addPackaging').onclick = () => { addPackaging();};
+    document.getElementById("addRecipe").onclick = addRecipe;
+    document.getElementById("addIngredient").onclick = addIngredient;
+    document.getElementById("addPackaging").onclick = addPackaging;
     populatePackagingSelect();
-}
-if(document.getElementById('recipeContent')){
-    displayRecipes('');
-    populatePackagingSelect();
-    document.getElementById('filter').onkeyup = () => { updateDisplayedRecipes();};
+    document.getElementById("newIngredientType").onchange = () => { updateUnitOfMeasurementSelect('newIngredientName', 'newIngredientType', 'newIngredientUnitOfMeasure'); };
+    updateUnitOfMeasurementSelect('newIngredientName', 'newIngredientType', 'newIngredientUnitOfMeasure');
 }
 
-if(document.getElementById('ingredientContent')){
+if (document.getElementById("recipeContent")) {
+    displayRecipes();
+    populatePackagingSelect();
+    document.getElementById("filter").onkeyup = displayRecipes;
+}
+
+if (document.getElementById("ingredientContent")) {
     displayIngredients();
     addUnitOfMeasureToIngredientControls();
-    document.getElementById('newIngredientType').onchange = () => {updateAddIngredientUnitOfMeasureDropdown()};
+    document.getElementById("newIngredientType").onchange = () => { updateUnitOfMeasurementSelect('newIngredientName', 'newIngredientType', 'newIngredientUnitOfMeasure'); };
 }
 
-if(document.getElementById('packagingContent')){
+if (document.getElementById("packagingContent")) {
     displayPackagings();
 }
 
-if(document.getElementById('hourlyWageSpan')){
-    document.getElementById('hourlyWageSpan').innerText = "$"+hourlyWage;
+// Update hourly wage display
+if (document.getElementById('hourlyWageSpan')) {
+    document.getElementById('hourlyWageSpan').innerText = `$${hourlyWage}`;
+}
 
-    document.getElementById('uploadBackup').addEventListener("change", function () {
-        if (this.files && this.files[0]) {
-          var myFile = this.files[0];
-          var reader = new FileReader();
-          
-          reader.addEventListener('load', function (e) {
-            let output = (e.target.result).split("**");
-            localStorage.setItem("Recipes", output[0]);
-            localStorage.setItem("Ingredients", output[1]);
-            localStorage.setItem("Packagings", output[2]);
-            localStorage.setItem("HourlyWage", output[3]);
+// Handle backup file upload
+if (document.getElementById('uploadBackup')) {
+    document.getElementById('uploadBackup').addEventListener('change', (event) => {
+        const myFile = event.target.files[0];
+        const reader = new FileReader();
+
+        reader.addEventListener('load', (e) => {
+            const output = e.target.result.split('**');
+            localStorage.setItem('Recipes', output[0]);
+            localStorage.setItem('Ingredients', output[1]);
+            localStorage.setItem('Packagings', output[2]);
+            localStorage.setItem('HourlyWage', output[3]);
             window.location.reload();
-          });
-          
-          reader.readAsBinaryString(myFile);
-        }   
-      });
+        });
+
+        reader.readAsBinaryString(myFile);
+    });
 }
 
+function createRecipeCard(recipe) {
+    const recipeCard = document.createElement('div');
+    recipeCard.className = 'card';
 
+    const recipeCardBody = document.createElement('div');
+    recipeCardBody.className = 'card-body';
 
-function updateDisplayedRecipes(){
+    const recipeCardTitle = document.createElement('h5');
+    recipeCardTitle.className = 'card-title';
+    recipeCardTitle.innerText = recipe.name;
+    recipeCardBody.appendChild(recipeCardTitle);
+
+    for (const ingredient of recipe.ingredients) {
+        const recipeCardIngredient = document.createElement('p');
+        recipeCardIngredient.innerText = `${ingredient.name} ${ingredient.amount} ${ingredient.unitOfMeasure}`;
+        recipeCardIngredient.className = 'card-text';
+        recipeCardBody.appendChild(recipeCardIngredient);
+    }
+
+    const recipeNotes = document.createElement('p');
+    recipeNotes.innerText = recipe.notes;
+    recipeNotes.className = 'text-muted font-italic';
+    recipeCardBody.appendChild(recipeNotes);
+
+    const updateButton = document.createElement('button');
+    updateButton.className = 'btn btn-info float-right mr-2';
+    updateButton.setAttribute('data-toggle', 'modal');
+    updateButton.setAttribute('data-target', '#updateModal');
+    updateButton.onclick = () => {
+        updateRecipeByName(recipe.name);
+    };
+
+    const updateIcon = document.createElement('i');
+    updateIcon.className = 'fa-solid fa-pen-to-square';
+    updateButton.appendChild(updateIcon);
+
+    const cardFooter = document.createElement('div');
+    cardFooter.className = 'card-footer';
+
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'btn btn-danger float-right';
+    deleteButton.onclick = () => {
+        deleteRecipeByName(recipe.name);
+    };
+
+    const deleteIcon = document.createElement('i');
+    deleteIcon.className = 'fa-solid fa-trash';
+    deleteButton.appendChild(deleteIcon);
+
+    const recipePriceElement = document.createElement('span');
+    recipePriceElement.className = "text-success"
+    recipePriceElement.innerText =`\$${getRecipePrice(recipe.name)}`;
+
+    cardFooter.appendChild(recipePriceElement);
+    cardFooter.appendChild(deleteButton);
+    cardFooter.appendChild(updateButton);
+
+    recipeCard.appendChild(recipeCardBody);
+    recipeCard.appendChild(cardFooter);
+    return recipeCard;
+}
+
+function createRecipeCardRow(rowId) {
+    const newRecipeCardRow = document.createElement('div');
+    newRecipeCardRow.className = 'card-deck py-2';
+    newRecipeCardRow.id = rowId;
+    return newRecipeCardRow;
+}
+
+function displayRecipes() {
+    const filter = capitalize(document.getElementById('filter').value)
+    const displayedRecipes = recipes.filter((recipe) => recipe.startsWith(`{"name":"${filter}`));
     document.getElementById('recipeContent').innerHTML = '';
-    displayRecipes(capitalize(document.getElementById('filter').value));
-}
+    for (let i = 0; i < displayedRecipes.length; i++) {
+        const recipeJSONObject = JSON.parse(displayedRecipes[i]);
+        const recipeCardRowId = `recipeCardRow${Math.floor(i / 3)}`;
 
-function displayRecipes(filter){
-    let displayedRecipes = recipes.filter(e => e.startsWith(`{\"name\":\"${filter}`));
-    for(let i = 0; i < Object.keys(displayedRecipes).length; i++){
-        let recipeCardRowId = 'recipeCardRow' + Math.floor(i/3);
-        
-        if(i%3==0){
-            let newRecipeCardRow = document.createElement('div');
-            newRecipeCardRow.className = 'card-deck py-2';
-            newRecipeCardRow.id = recipeCardRowId;
+        if (i % 3 === 0) {
+            const newRecipeCardRow = createRecipeCardRow(recipeCardRowId);
             document.getElementById('recipeContent').appendChild(newRecipeCardRow);
         }
-    
-        let recipeJSONObject = JSON.parse(displayedRecipes[i]);
-        let recipeCard = document.createElement('div');
-        recipeCard.className = 'card';
-        let recipeCardBody = document.createElement('div');
-        recipeCardBody.className = 'card-body';
-        let recipeCardTitle = document.createElement('h5');
-        recipeCardTitle.className = 'card-title';
-        recipeCardTitle.innerText = recipeJSONObject.name;
-    
-        recipeCardBody.appendChild(recipeCardTitle);
-    
-        for(let j = 0; j < recipeJSONObject.ingredients.length; j++){
-            let recipeCardIngredient = document.createElement('p');
-            recipeCardIngredient.innerText = `${recipeJSONObject.ingredients[j].name} ${recipeJSONObject.ingredients[j].amount} ${recipeJSONObject.ingredients[j].unitOfMeasure}`;
-            recipeCardIngredient.className = "card-text";
-            recipeCardBody.appendChild(recipeCardIngredient);
-        }
 
-        let recipeNotes = document.createElement('p');
-        recipeNotes.innerText = recipeJSONObject.notes;
-        recipeNotes.className = "text-muted font-italic"
-        recipeCardBody.appendChild(recipeNotes);
-
-        let cardFooter = document.createElement('div');
-        cardFooter.className = 'card-footer';
-
-        let updateButton = document.createElement('button');
-        updateButton.className="btn btn-info float-right  mr-2";
-        updateButton.setAttribute('data-toggle','modal');
-        updateButton.setAttribute('data-target','#updateModal');
-        updateButton.onclick = () => {updateRecipeByName(recipeJSONObject.name);}
-
-        let updateIcon = document.createElement('i');
-        updateIcon.className = "fa-solid fa-pen-to-square";
-        updateButton.appendChild(updateIcon);
-        
-        let deleteButton = document.createElement('button');
-        deleteButton.className="btn btn-danger float-right";
-        deleteButton.onclick = () => {deleteRecipeByName(recipeJSONObject.name);}
-
-        let deleteIcon = document.createElement('i');
-        deleteIcon.className = "fa-solid fa-trash";
-        deleteButton.appendChild(deleteIcon);
-
-        let recipePrice = getRecipePrice(recipeJSONObject.name);
-        let recipePriceElement = document.createElement('span');
-        recipePriceElement.className = "text-success"
-        recipePriceElement.innerText =`\$${recipePrice}`;
-
-        cardFooter.appendChild(recipePriceElement);
-        cardFooter.appendChild(deleteButton);
-        cardFooter.appendChild(updateButton);
-        recipeCard.appendChild(recipeCardBody);
-        recipeCard.appendChild(cardFooter);
-        let existingRecipeCardRow = document.getElementById(recipeCardRowId);
+        const recipeCard = createRecipeCard(recipeJSONObject);
+        const existingRecipeCardRow = document.getElementById(recipeCardRowId);
         existingRecipeCardRow.appendChild(recipeCard);
-    } 
+    }
 }
 
-function displayIngredients(){
-    for(let i = 0; i < Object.keys(ingredients).length; i++){
-        let ingredientCardRowId = 'ingredientCardRow' + Math.floor(i/3);
-        
-        if(i%3==0){
-            let newIngredientCardRow = document.createElement('div');
-            newIngredientCardRow.className = 'card-deck py-2';
-            newIngredientCardRow.id = ingredientCardRowId;
+function createIngredientCard(ingredient) {
+    const ingredientCard = document.createElement('div');
+    ingredientCard.className = 'card';
+
+    const ingredientCardBody = document.createElement('div');
+    ingredientCardBody.className = 'card-body';
+
+    const ingredientCardTitle = document.createElement('h5');
+    ingredientCardTitle.className = 'card-title';
+    ingredientCardTitle.innerText = ingredient.name;
+    ingredientCardBody.appendChild(ingredientCardTitle);
+
+    const ingredientCardInfo = document.createElement('p');
+    ingredientCardInfo.innerText = `${ingredient.amount} ${ingredient.unitOfMeasure} is $${ingredient.cost}`;
+    ingredientCardInfo.className = 'card-text';
+    ingredientCardBody.appendChild(ingredientCardInfo);
+
+    const cardFooter = document.createElement('div');
+    cardFooter.className = 'card-footer';
+
+    const updateButton = document.createElement('button');
+    updateButton.className = 'btn btn-info float-right mr-2';
+    updateButton.setAttribute('data-toggle', 'modal');
+    updateButton.setAttribute('data-target', '#updateModal');
+    updateButton.onclick = () => {
+        updateIngredientByName(ingredient.name);
+    };
+
+    const updateIcon = document.createElement('i');
+    updateIcon.className = 'fa-solid fa-pen-to-square';
+    updateButton.appendChild(updateIcon);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'btn btn-danger float-right';
+    deleteButton.onclick = () => {
+        deleteIngredientByName(ingredient.name);
+    };
+
+    const deleteIcon = document.createElement('i');
+    deleteIcon.className = 'fa-solid fa-trash';
+    deleteButton.appendChild(deleteIcon);
+
+    cardFooter.appendChild(deleteButton);
+    cardFooter.appendChild(updateButton);
+
+    ingredientCard.appendChild(ingredientCardBody);
+    ingredientCard.appendChild(cardFooter);
+
+    return ingredientCard;
+}
+
+function createIngredientCardRow(rowId) {
+    const newIngredientCardRow = document.createElement('div');
+    newIngredientCardRow.className = 'card-deck py-2';
+    newIngredientCardRow.id = rowId;
+    return newIngredientCardRow;
+}
+
+function displayIngredients() {
+    for (let i = 0; i < ingredients.length; i++) {
+        const ingredientJSONObject = JSON.parse(ingredients[i]);
+        const ingredientCardRowId = `ingredientCardRow${Math.floor(i / 3)}`;
+
+        if (i % 3 === 0) {
+            const newIngredientCardRow = createIngredientCardRow(ingredientCardRowId);
             document.getElementById('ingredientContent').appendChild(newIngredientCardRow);
         }
 
-        let ingredientJSONObject = JSON.parse(ingredients[i]);
-        let ingredientCard = document.createElement('div');
-        ingredientCard.className = 'card';
-        let ingredientCardBody = document.createElement('div');
-        ingredientCardBody.className = 'card-body';
-        let ingredientCardTitle = document.createElement('h5');
-        ingredientCardTitle.className = 'card-title';
-        ingredientCardTitle.innerText = ingredientJSONObject.name;
-    
-        ingredientCardBody.appendChild(ingredientCardTitle);
-
-        let ingredientCardInfo = document.createElement('p');
-        ingredientCardInfo.innerText = `${ingredientJSONObject.amount} ${ingredientJSONObject.unitOfMeasure} is \$${ingredientJSONObject.cost}`;
-        ingredientCardInfo.className = "card-text";
-        ingredientCardBody.appendChild(ingredientCardInfo);
-
-        let cardFooter = document.createElement('div');
-        cardFooter.className = 'card-footer';
-        
-        let updateButton = document.createElement('button');
-        updateButton.className="btn btn-info float-right  mr-2";
-        updateButton.setAttribute('data-toggle','modal');
-        updateButton.setAttribute('data-target','#updateModal');
-        updateButton.onclick = () => {updateIngredientByName(ingredientJSONObject.name);}
-
-        let updateIcon = document.createElement('i');
-        updateIcon.className = "fa-solid fa-pen-to-square";
-        updateButton.appendChild(updateIcon);
-
-        let deleteButton = document.createElement('button');
-        deleteButton.className="btn btn-danger float-right";
-        deleteButton.onclick = () => {deleteIngredientByName(ingredientJSONObject.name);}
-
-        let deleteIcon = document.createElement('i');
-        deleteIcon.className = "fa-solid fa-trash";
-        deleteButton.appendChild(deleteIcon);
-
-        cardFooter.appendChild(deleteButton);
-        cardFooter.appendChild(updateButton);
-        ingredientCard.appendChild(ingredientCardBody);
-        ingredientCard.appendChild(cardFooter);
-        let existingingredientCardRow = document.getElementById(ingredientCardRowId);
-        existingingredientCardRow.appendChild(ingredientCard);
+        const ingredientCard = createIngredientCard(ingredientJSONObject);
+        const existingIngredientCardRow = document.getElementById(ingredientCardRowId);
+        existingIngredientCardRow.appendChild(ingredientCard);
     }
 }
 
-function displayPackagings(){
-    for(let i = 0; i < Object.keys(packagings).length; i++){
-        let packagingCardRowId = 'packagingCardRow' + Math.floor(i/3);
-        
-        if(i%3==0){
-            let newPackagingCardRow = document.createElement('div');
-            newPackagingCardRow.className = 'card-deck py-2';
-            newPackagingCardRow.id = packagingCardRowId;
+function createPackagingCard(packaging) {
+    const packagingCard = document.createElement('div');
+    packagingCard.className = 'card';
+
+    const packagingCardBody = document.createElement('div');
+    packagingCardBody.className = 'card-body';
+
+    const packagingCardTitle = document.createElement('h5');
+    packagingCardTitle.className = 'card-title';
+    packagingCardTitle.innerText = packaging.name;
+    packagingCardBody.appendChild(packagingCardTitle);
+
+    const packagingCardInfo = document.createElement('p');
+    packagingCardInfo.innerText = `${packaging.amount} is $${packaging.cost}`;
+    packagingCardInfo.className = 'card-text';
+    packagingCardBody.appendChild(packagingCardInfo);
+
+    const cardFooter = document.createElement('div');
+    cardFooter.className = 'card-footer';
+
+    const updateButton = document.createElement('button');
+    updateButton.className = 'btn btn-info float-right mr-2';
+    updateButton.setAttribute('data-toggle', 'modal');
+    updateButton.setAttribute('data-target', '#updateModal');
+    updateButton.onclick = () => {
+        updatePackagingByName(packaging.name);
+    };
+
+    const updateIcon = document.createElement('i');
+    updateIcon.className = 'fa-solid fa-pen-to-square';
+    updateButton.appendChild(updateIcon);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'btn btn-danger float-right';
+    deleteButton.onclick = () => {
+        deletePackagingByName(packaging.name);
+    };
+
+    const deleteIcon = document.createElement('i');
+    deleteIcon.className = 'fa-solid fa-trash';
+    deleteButton.appendChild(deleteIcon);
+
+    cardFooter.appendChild(deleteButton);
+    cardFooter.appendChild(updateButton);
+
+    packagingCard.appendChild(packagingCardBody);
+    packagingCard.appendChild(cardFooter);
+
+    return packagingCard;
+}
+
+function createPackagingCardRow(rowId) {
+    const newPackagingCardRow = document.createElement('div');
+    newPackagingCardRow.className = 'card-deck py-2';
+    newPackagingCardRow.id = rowId;
+    return newPackagingCardRow;
+}
+
+function displayPackagings() {
+    for (let i = 0; i < packagings.length; i++) {
+        const packagingJSONObject = JSON.parse(packagings[i]);
+        const packagingCardRowId = `packagingCardRow${Math.floor(i / 3)}`;
+
+        if (i % 3 === 0) {
+            const newPackagingCardRow = createPackagingCardRow(packagingCardRowId);
             document.getElementById('packagingContent').appendChild(newPackagingCardRow);
         }
 
-        let packagingJSONObject = JSON.parse(packagings[i]);
-        let packagingCard = document.createElement('div');
-        packagingCard.className = 'card';
-        let packagingCardBody = document.createElement('div');
-        packagingCardBody.className = 'card-body';
-        let packagingCardTitle = document.createElement('h5');
-        packagingCardTitle.className = 'card-title';
-        packagingCardTitle.innerText = packagingJSONObject.name;
-    
-        packagingCardBody.appendChild(packagingCardTitle);
-
-        let packagingCardInfo = document.createElement('p');
-        packagingCardInfo.innerText = `${packagingJSONObject.amount} is \$${packagingJSONObject.cost}`;
-        packagingCardInfo.className = "card-text";
-        packagingCardBody.appendChild(packagingCardInfo);
-
-        let cardFooter = document.createElement('div');
-        cardFooter.className = 'card-footer';
-        
-        let updateButton = document.createElement('button');
-        updateButton.className="btn btn-info float-right  mr-2";
-        updateButton.setAttribute('data-toggle','modal');
-        updateButton.setAttribute('data-target','#updateModal');
-        updateButton.onclick = () => {updatePackagingByName(packagingJSONObject.name);}
-
-        let updateIcon = document.createElement('i');
-        updateIcon.className = "fa-solid fa-pen-to-square";
-        updateButton.appendChild(updateIcon);
-
-        let deleteButton = document.createElement('button');
-        deleteButton.className="btn btn-danger float-right";
-        deleteButton.onclick = () => {deletePackagingByName(packagingJSONObject.name);}
-
-        let deleteIcon = document.createElement('i');
-        deleteIcon.className = "fa-solid fa-trash";
-        deleteButton.appendChild(deleteIcon);
-
-        cardFooter.appendChild(deleteButton);
-        cardFooter.appendChild(updateButton);
-        packagingCard.appendChild(packagingCardBody);
-        packagingCard.appendChild(cardFooter);
-        let existingpackagingCardRow = document.getElementById(packagingCardRowId);
-        existingpackagingCardRow.appendChild(packagingCard);
+        const packagingCard = createPackagingCard(packagingJSONObject);
+        const existingPackagingCardRow = document.getElementById(packagingCardRowId);
+        existingPackagingCardRow.appendChild(packagingCard);
     }
 }
-   
-function addUnitOfMeasureToIngredientControls(){
-    let col = document.createElement('div');
-    let ingredientControls = document.getElementById('ingredientControls');
-    let newIngredientCostColumn =  document.getElementById('newIngredientCostColumn');
-    col.className = "col";
-    let select = createUnitOfMeasurementDropdown()
+
+function addIngredientToRecipe(ingredientIndex) {
+    const ingredientName = capitalize(document.getElementById(`ingredientName${ingredientIndex}`).value);
+    const ingredientAmount = document.getElementById(`ingredientAmount${ingredientIndex}`).value;
+    const ingredientUnitOfMeasure = document.getElementById(`ingredientUnitOfMeasureSelect${ingredientIndex}`).value;
+    return `{"name":"${ingredientName}","amount":"${ingredientAmount}","unitOfMeasure":"${ingredientUnitOfMeasure}"},`;
+}
+
+function checkRequiredFields(id) {
+    for (const el of document.getElementById(id).querySelectorAll('[required]')) {
+        if (el.value === '') {
+            document.getElementById('errorBannerRecipe').classList.remove('d-none');
+            document.getElementById('errorTextRecipe').innerText = 'You must fill out all required fields!';
+            return false;
+        }
+    }
+    return true;
+}
+
+function addRecipe(e) {
+    const recipeName = capitalize(document.getElementById('newRecipeName').value);
+    const recipeNotes = document.getElementById('newRecipeNotes').value;
+    const recipeTime = document.getElementById('newRecipeTime').value;
+    const packagingName = capitalize(document.getElementById('newRecipePackagingSelect').value);
+    const packagingCount = document.getElementById('newRecipePackagingCount').value;
+
+    const recipeIngredients = [];
+    //get each ingredient row
+    let recipeIngredientRowElements = document.querySelectorAll("[id^='ingredientRow']");
+
+    for (let i = 0; i < recipeIngredientRowElements.length; i++) {
+        const ingredientId = recipeIngredientRowElements[i].id;
+        let ingredientIndex = ingredientId.charAt(ingredientId.length - 1);
+        recipeIngredients.push(addIngredientToRecipe(ingredientIndex));
+    }
+    const recipeIngredientsString = recipeIngredients.join('').slice(0, -1);
+
+    const recipe = `{"name":"${recipeName}","ingredients":[${recipeIngredientsString}],"notes":"${recipeNotes}","time":"${recipeTime}","packagingName":"${packagingName}","packagingCount":"${packagingCount}"}`;
+
+    const recipeExists = recipes.some((recipeItem) => JSON.parse(recipeItem).name === recipeName);
+
+    if (!checkRequiredFields('addRecipeControls')) {
+        return;
+    }
+
+    if (!recipeExists) {
+        recipes.push(recipe);
+        updateLocalStorage('Recipes', recipes);
+        window.location.reload();
+    } else if (recipeExists && e.currentTarget.id === 'modalUpdateBtn') {
+        const indexToUpdate = recipes.findIndex((recipeItem) => JSON.parse(recipeItem).name === recipeName);
+        recipes[indexToUpdate] = recipe;
+        updateLocalStorage('Recipes', recipes);
+        window.location.reload();
+    } else {
+        document.getElementById('errorBannerRecipe').classList.remove('d-none');
+        document.getElementById('errorTextRecipe').innerText = 'There is already a recipe with that name!';
+    }
+}
+
+function createUnitOfMeasurementDropdown() {
+    const select = document.createElement('select');
+    select.className = 'form-control';
     select.id = 'newIngredientUnitOfMeasure';
+
+    const addOption = (value, text) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.innerText = text;
+        select.appendChild(option);
+    };
+
+    addOption(UnitsOfMeasure.Cup, 'Cup');
+    addOption(UnitsOfMeasure.Gallon, 'Gallon');
+    addOption(UnitsOfMeasure.Gram, 'Gram');
+    addOption(UnitsOfMeasure.Pound, 'Pound');
+    addOption(UnitsOfMeasure.Milliliter, 'Milliliter');
+    addOption(UnitsOfMeasure.Ounce, 'Ounce');
+    addOption(UnitsOfMeasure.Pint, 'Pint');
+    addOption(UnitsOfMeasure.Quart, 'Quart');
+    addOption(UnitsOfMeasure.Tablespoon, 'Tablespoon');
+    addOption(UnitsOfMeasure.Teaspoon, 'Teaspoon');
+    addOption(UnitsOfMeasure.Unit, 'Unit');
+
+    return select;
+}
+
+
+function addUnitOfMeasureToIngredientControls() {
+    const col = document.createElement('div');
+    const ingredientControls = document.getElementById('ingredientControls');
+    const newIngredientCostColumn = document.getElementById('newIngredientCostColumn');
+    col.className = 'col';
+    
+
+    const select = createUnitOfMeasurementDropdown();
     col.appendChild(select);
+
     ingredientControls.insertBefore(col, newIngredientCostColumn);
 }
 
-function addRecipe(e){
-    let recipeIngredients = '';
-    let recipeName = capitalize(document.getElementById('newRecipeName').value);
-    let recipeNotes = document.getElementById('newRecipeNotes').value;
-    let recipeTime = document.getElementById('newRecipeTime').value;
-    let packagingName = capitalize(document.getElementById('newRecipePackagingSelect').value);
-    let packagingCount = document.getElementById('newRecipePackagingCount').value;
+function addIngredient(e) {
+    const ingredientName = capitalize(document.getElementById('newIngredientName').value);
+    const ingredientAmount = document.getElementById('newIngredientAmount').value;
+    const ingredientUnitOfMeasure = document.getElementById('newIngredientUnitOfMeasure').value;
+    const ingredientCost = document.getElementById('newIngredientCost').value;
+    const ingredientType = document.getElementById('newIngredientType').value;
 
-    let recipeExists = recipes.filter(e => e.startsWith(`{\"name\":\"${recipeName}`)).length > 0;
+    const ingredientExists = ingredients.some((ingredientItem) => JSON.parse(ingredientItem).name === ingredientName);
 
-    for(let i = 1; i < recipeIngredientCount+1; i++){
-        let ingredientName = capitalize(document.getElementById('ingredientName'+(i)).value);
-        recipeIngredients += `{\"name\":\"${ingredientName}\", \"amount\":\"${document.getElementById('ingredientAmount'+(i)).value}\", \"unitOfMeasure\":\"${document.getElementById('ingredientSelect'+(i)).value}\"},`
+    if (!checkRequiredFields('addIngredientControls')) {
+        return;
     }
 
-    //remove last comma
-    recipeIngredients = recipeIngredients.slice(0, -1);
+    const ingredient = `{"name":"${ingredientName}","amount":"${ingredientAmount}","unitOfMeasure":"${ingredientUnitOfMeasure}","cost":"${ingredientCost}","type":"${ingredientType}"}`;
 
-    let recipe = `{\"name\":\"${recipeName}\", \"ingredients\":[` + recipeIngredients + `], \"notes\":\"${recipeNotes}\", \"time\":\"${recipeTime}\", \"packagingName\":\"${packagingName}\", \"packagingCount\":\"${packagingCount}\"}`;
-    
-    for (const el of document.getElementById('addRecipeControls').querySelectorAll("[required]")) {
-        if (el.value == "") {
-            document.getElementById('errorBannerRecipe').classList.remove('d-none');
-            document.getElementById('errorTextRecipe').innerText = "You must fill out all required fields!";
-            return;
-        }
-    }
-
-    if(!recipeExists){
-        recipes.push(recipe);
-        localStorage.setItem("Recipes", JSON.stringify(recipes));
-        window.location.reload();
-    }
-    else if(recipeExists && e.currentTarget.id == "modalUpdateBtn"){
-        //get index and replace
-        let i = 0; 
-        while(i < recipes.length){
-            
-            if(JSON.parse(recipes[i]).name == recipeName){
-                break;
-            }
-            i++;
-        }
-        recipes[i] = recipe;
-        localStorage.setItem("Recipes", JSON.stringify(recipes));
-        window.location.reload();        
-    }
-    else{
-        document.getElementById('errorBannerRecipe').classList.remove('d-none');
-        document.getElementById('errorTextRecipe').innerText = "There is already a recipe with that name!";
-    }
-    
-}
-
-function addIngredient(e){
-    let ingredientName = capitalize(document.getElementById('newIngredientName').value);
-    let ingredientAmount = document.getElementById('newIngredientAmount').value;
-    let ingredientUnitOfMeasure = document.getElementById('newIngredientUnitOfMeasure').value;
-    let ingredientCost = document.getElementById('newIngredientCost').value;
-    let ingredientType = document.getElementById('newIngredientType').value;
-
-    let ingredientExists = ingredients.filter(g => g.startsWith(`{\"name\":\"${ingredientName}`)).length > 0;
-
-    let ingredient = `{\"name\":\"${ingredientName}\", \"amount\":\"${ingredientAmount}\", \"unitOfMeasure\":\"${ingredientUnitOfMeasure}\", \"cost\":\"${ingredientCost}\", \"type\":\"${ingredientType}\"}`;
-    
-    for (const el of document.getElementById('addIngredientControls').querySelectorAll("[required]")) {
-        if (el.value == "") {
-            document.getElementById('errorBannerIngredient').classList.remove('d-none');
-            document.getElementById('errorTextIngredient').innerText = "You must fill out all required fields!";
-            return;
-        }
-    }
-
-    if(!ingredientExists){
+    if (!ingredientExists) {
         ingredients.push(ingredient);
-        localStorage.setItem("Ingredients", JSON.stringify(ingredients));
+        updateLocalStorage('Ingredients', ingredients);
         window.location.reload();
-    }
-    else if(ingredientExists && e.currentTarget.id == "modalUpdateBtn"){
-        //get index and replace
-        let i = 0; 
-        while(i < ingredients.length){
-            
-            if(JSON.parse(ingredients[i]).name == ingredientName){
-                break;
-            }
-            i++;
-        }
-        ingredients[i] = ingredient;
-        localStorage.setItem("Ingredients", JSON.stringify(ingredients));
-        window.location.reload();        
-    }
-    else{
+    } else if (ingredientExists && e.currentTarget.id === 'modalUpdateBtn') {
+        const indexToUpdate = ingredients.findIndex((ingredientItem) => JSON.parse(ingredientItem).name === ingredientName);
+        ingredients[indexToUpdate] = ingredient;
+        updateLocalStorage('Ingredients', ingredients);
+        window.location.reload();
+    } else {
         document.getElementById('errorBannerIngredient').classList.remove('d-none');
-        document.getElementById('errorTextIngredient').innerText = "There is already an ingredient with that name!";
+        document.getElementById('errorTextIngredient').innerText = 'There is already an ingredient with that name!';
     }
 }
 
-function addPackaging(e){
-    let packagingName = capitalize(document.getElementById('newPackagingName').value);
-    let packagingAmount = document.getElementById('newPackagingAmount').value;
-    let packagingCost = document.getElementById('newPackagingCost').value;
+function addPackaging(e) {
+    const packagingName = capitalize(document.getElementById('newPackagingName').value);
+    const packagingAmount = document.getElementById('newPackagingAmount').value;
+    const packagingCost = document.getElementById('newPackagingCost').value;
 
-    let packagingExists = packagings.filter(e => e.startsWith(`{\"name\":\"${packagingName}`)).length > 0;
+    const packagingExists = packagings.some((packagingItem) => JSON.parse(packagingItem).name === packagingName);
 
-    let packaging = `{\"name\":\"${packagingName}\", \"amount\":\"${packagingAmount}\", \"cost\":\"${packagingCost}\"}`;
-    
-    for (const el of document.getElementById('addPackagingControls').querySelectorAll("[required]")) {
-        if (el.value == "") {
-            document.getElementById('errorBannerPackaging').classList.remove('d-none');
-            document.getElementById('errorTextPackaging').innerText = "You must fill out all required fields!";
-            return;
-        }
+    const packaging = `{"name":"${packagingName}","amount":"${packagingAmount}","cost":"${packagingCost}"}`;
+
+    if (!checkRequiredFields('addPackagingControls')) {
+        return;
     }
 
-    if(!packagingExists){
+    if (!packagingExists) {
         packagings.push(packaging);
-        localStorage.setItem("Packagings", JSON.stringify(packagings));
+        updateLocalStorage('Packagings', packagings);
         window.location.reload();
-    }
-    else if(packagingExists && e.currentTarget.id == "modalUpdateBtn"){
-        //get index and replace
-        let i = 0; 
-        while(i < packagings.length){
-            
-            if(JSON.parse(packagings[i]).name == packagingName){
-                break;
-            }
-            i++;
-        }
-        packagings[i] = packaging;
-        localStorage.setItem("Packagings", JSON.stringify(packagings));
-        window.location.reload();        
-    }
-    else{
+    } else if (packagingExists && e.currentTarget.id === 'modalUpdateBtn') {
+        const indexToUpdate = packagings.findIndex((packagingItem) => JSON.parse(packagingItem).name === packagingName);
+        packagings[indexToUpdate] = packaging;
+        updateLocalStorage('Packagings', packagings);
+        window.location.reload();
+    } else {
         document.getElementById('errorBannerPackaging').classList.remove('d-none');
-        document.getElementById('errorTextPackaging').innerText = "There is already a packaging with that name!";
+        document.getElementById('errorTextPackaging').innerText = 'There is already a packaging with that name!';
     }
 }
 
-function deleteRecipeByName(name){
-    var result = confirm(`Are you sure you want to delete ${name}?`);
-    if (result) {
-        localStorage.setItem("Recipes", JSON.stringify(recipes.filter(e => !e.startsWith(`{\"name\":\"${name}`))));
+function deleteRecipeByName(name) {
+    if (confirmAction(`Are you sure you want to delete ${name}?`)) {
+        updateLocalStorage('Recipes', recipes.filter(e => !e.startsWith(`{"name":"${name}`)));
         window.location.reload();
     }
 }
 
-function deleteIngredientByName(name){
-    var result = confirm(`Are you sure you want to delete ${name}?`);
-    if (result) {
-        localStorage.setItem("Ingredients", JSON.stringify(ingredients.filter(e => !e.startsWith(`{\"name\":\"${name}`))));
+function deleteIngredientByName(name) {
+    if (confirmAction(`Are you sure you want to delete ${name}?`)) {
+        updateLocalStorage('Ingredients', ingredients.filter(e => !e.startsWith(`{"name":"${name}`)));
         window.location.reload();
     }
 }
 
-function deletePackagingByName(name){
-    var result = confirm(`Are you sure you want to delete ${name}?`);
-    if (result) {
-        localStorage.setItem("Packagings", JSON.stringify(packagings.filter(e => !e.startsWith(`{\"name\":\"${name}`))));
+function deletePackagingByName(name) {
+    if (confirmAction(`Are you sure you want to delete ${name}?`)) {
+        updateLocalStorage('Packagings', packagings.filter(e => !e.startsWith(`{"name":"${name}`)));
         window.location.reload();
     }
 }
 
-function updateRecipeByName(recipeName){
-    if(!document.getElementById('errorBannerRecipe').classList.contains('d-none')){
-        document.getElementById('errorBannerRecipe').classList.add('d-none');
-    }
+function updateRecipeByName(recipeName) {
+    const recipe = getRecipeByName(recipeName);
+    const addRecipeIngredientsBtn = document.getElementById('addRecipeIngredientsBtn');
 
-    let recipe = getRecipeByName(recipeName);
-    let addRecipeIngredientsBtn = document.getElementById('addRecipeIngredientsBtn');
-
-    let ingredientRowDeleteBtns = document.querySelectorAll('[id^="ingredientRowDelete"]')
-    for(let i = 0; i < ingredientRowDeleteBtns.length; i++){
-        ingredientRowDeleteBtns[i].click();
+    const ingredientDeleteBtns = document.querySelectorAll('[id^="ingredientDelete"]');
+    for (const btn of ingredientDeleteBtns) {
+        btn.click();
     }
 
     document.getElementById('updateModalLabel').innerText = `Update ${recipeName}`;
@@ -466,60 +523,50 @@ function updateRecipeByName(recipeName){
     document.getElementById('newRecipeNotes').value = recipe.notes;
     document.getElementById('newRecipePackagingSelect').value = recipe.packagingName;
     document.getElementById('newRecipePackagingCount').value = recipe.packagingCount;
-    
-    for(let i = 0; i < recipe.ingredients.length; i++){
+
+    for (let i = 0; i < recipe.ingredients.length; i++) {
         addRecipeIngredientsBtn.click();
-        let currentRecipeIngredient = recipe.ingredients[i];
-        document.getElementById('ingredientName'+recipeIngredientCount).value = currentRecipeIngredient.name;
-        let event = new Event('change');
-        document.getElementById('ingredientName'+recipeIngredientCount).dispatchEvent(event)
-        document.getElementById('ingredientAmount'+recipeIngredientCount).value = currentRecipeIngredient.amount;
-        document.getElementById('ingredientSelect'+recipeIngredientCount).value = currentRecipeIngredient.unitOfMeasure;
+        const currentRecipeIngredient = recipe.ingredients[i];
+        document.getElementById(`ingredientName${recipeIngredientCount}`).value = currentRecipeIngredient.name;
+        const event = new Event('change');
+        document.getElementById(`ingredientName${recipeIngredientCount}`).dispatchEvent(event);
+        document.getElementById(`ingredientAmount${recipeIngredientCount}`).value = currentRecipeIngredient.amount;
+        document.getElementById(`ingredientUnitOfMeasureSelect${recipeIngredientCount}`).value = currentRecipeIngredient.unitOfMeasure;
     }
 
-    let modalUpdateBtn = document.getElementById('modalUpdateBtn');
-    modalUpdateBtn.onclick = (e) => {addRecipe(e);};
-
+    const modalUpdateBtn = document.getElementById('modalUpdateBtn');
+    modalUpdateBtn.onclick = (e) => addRecipe(e);
 }
 
-function updateIngredientByName(ingredientName){
-    if(!document.getElementById('errorBannerIngredient').classList.contains('d-none')){
-        document.getElementById('errorBannerIngredient').classList.add('d-none');
-    }
-
-    let ingredient = getIngredientByName(ingredientName);
+function updateIngredientByName(ingredientName) {
+    const ingredient = getIngredientByName(ingredientName);
 
     document.getElementById('updateModalLabel').innerText = `Update ${ingredientName}`;
     document.getElementById('newIngredientName').value = ingredient.name;
     document.getElementById('newIngredientAmount').value = ingredient.amount;
     document.getElementById('newIngredientCost').value = ingredient.cost;
     document.getElementById('newIngredientType').value = ingredient.type;
-    updateAddIngredientUnitOfMeasureDropdown()
+    updateUnitOfMeasurementSelect('newIngredientName', 'newIngredientType', 'newIngredientUnitOfMeasure');
     document.getElementById('newIngredientUnitOfMeasure').value = ingredient.unitOfMeasure;
-    let modalUpdateBtn = document.getElementById('modalUpdateBtn');
-    modalUpdateBtn.onclick = (e) => {addIngredient(e);};
 
+    const modalUpdateBtn = document.getElementById('modalUpdateBtn');
+    modalUpdateBtn.onclick = (e) => addIngredient(e);
 }
 
-function updatePackagingByName(packagingName){
-    if(!document.getElementById('errorBannerPackaging').classList.contains('d-none')){
-        document.getElementById('errorBannerPackaging').classList.add('d-none');
-    }
-
-    let packaging = getPackagingByName(packagingName);
+function updatePackagingByName(packagingName) {
+    const packaging = getPackagingByName(packagingName);
 
     document.getElementById('updateModalLabel').innerText = `Update ${packagingName}`;
     document.getElementById('newPackagingName').value = packaging.name;
     document.getElementById('newPackagingAmount').value = packaging.amount;
     document.getElementById('newPackagingCost').value = packaging.cost;
 
-    let modalUpdateBtn = document.getElementById('modalUpdateBtn');
-    modalUpdateBtn.onclick = (e) => {addPackaging(e);};
-
+    const modalUpdateBtn = document.getElementById('modalUpdateBtn');
+    modalUpdateBtn.onclick = (e) => addPackaging(e);
 }
 
 function save(){
-    let saveLink = document.createElement('a');
+    const saveLink = document.createElement('a');
     saveLink.href = "data:text/plain;charset=utf-8," + encodeURIComponent(localStorage.getItem("Recipes") + "**" + localStorage.getItem("Ingredients") + "**" + localStorage.getItem("Packagings") + "**" + localStorage.getItem("HourlyWage"));
     saveLink.download = "db.txt";
     document.body.appendChild(saveLink);
@@ -527,332 +574,217 @@ function save(){
 }
 
 function clearLocalStorage(){
-    var firstCheck = confirm("This will erase EVERYTHING. Are you sure you want to delete EVERYTHING?");
-    if (firstCheck) {
+    if (confirmAction(`This will erase EVERYTHING. Are you sure you want to delete EVERYTHING?`)) {
         save();
-        var secondCheck = confirm("I'm going to save first just in case OK?");
-        if(secondCheck){
+        if(confirmAction("I'm going to save first just in case OK?")){
             localStorage.clear();
             window.location.reload();
         }
     }
 }
 
-function addRecipeIngredientControls(){
+function createIngredientRow(recipeIngredientCount) {
+    const divRow = document.createElement('div');
+    divRow.className = 'form-row form-group';
+    divRow.id = `ingredientRow${recipeIngredientCount}`;
+
+    const createCol = (className) => {
+        const divCol = document.createElement('div');
+        divCol.className = className;
+        return divCol;
+    };
+
+    const ingredientName = createCol('col');
+    ingredientName.appendChild(generateIngredientSelect(`ingredientName${recipeIngredientCount}`, `ingredientType${recipeIngredientCount}s`, `ingredientUnitOfMeasureSelect${recipeIngredientCount}`));
+
+    const ingredientAmount = createCol('col');
+    ingredientAmount.innerHTML = `
+        <input id="ingredientAmount${recipeIngredientCount}" class="form-control" type="number" required placeholder="Ingredient Amount">
+    `;
+
+    const ingredientUnitOfMeasure = createCol('col');
+    const select = createUnitOfMeasurementDropdown();
+    select.id = `ingredientUnitOfMeasureSelect${recipeIngredientCount}`;
+    ingredientUnitOfMeasure.appendChild(select);
+
+    const deleteRowButton = createCol('col align-self-center');
+    deleteRowButton.innerHTML = `
+        <button id="ingredientDelete${recipeIngredientCount}" class="btn btn-danger" onclick="removeIngredientRow(${recipeIngredientCount})">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    `;
+
+    divRow.appendChild(ingredientName);
+    divRow.appendChild(ingredientAmount);
+    divRow.appendChild(ingredientUnitOfMeasure);
+    divRow.appendChild(deleteRowButton);
+
+    return divRow;
+}
+
+function addRecipeIngredientControls() {
     recipeIngredientCount++;
-    
-    let divRow = document.createElement('div');
-    divRow.className = "form-row form-group";
-    divRow.id = 'ingredientRow'+recipeIngredientCount;
-
-    let divCol1 = document.createElement('div');
-    divCol1.className = "col";
-    let divCol2 = document.createElement('div');
-    divCol2.className = "col";
-    let divCol3 = document.createElement('div');
-    divCol3.className = "col";
-    let divCol4 = document.createElement('div');
-    divCol4.className = "col align-self-center";
-    
-    let ingredientAmount = document.createElement('input');
-    ingredientAmount.id = 'ingredientAmount'+recipeIngredientCount;
-    ingredientAmount.className="form-control";
-    ingredientAmount.required = true;
-    ingredientAmount.type = "number";
-    ingredientAmount.placeholder = 'Ingredient Amount';
-    
-    let select = createUnitOfMeasurementDropdown();
-    select.id = 'ingredientSelect'+recipeIngredientCount;
-    
-    let deleteRowButton = document.createElement('button');
-    deleteRowButton.id = 'ingredientRowDelete'+recipeIngredientCount;
-    deleteRowButton.className = "btn btn-danger";
-    deleteRowButton.onclick = () => {document.getElementById(divRow.id).remove(); recipeIngredientCount--;}
-
-    let deleteIcon = document.createElement('i');
-    deleteIcon.className = "fa-solid fa-trash";
-    
-    let ingredientNameSelectId = 'ingredientName'+recipeIngredientCount;
-
-    deleteRowButton.appendChild(deleteIcon);
-    divCol1.appendChild(generateIngredientSelect(ingredientNameSelectId));
-    divCol2.appendChild(ingredientAmount);
-    divCol3.appendChild(select);
-    divCol4.appendChild(deleteRowButton);
-    divRow.appendChild(divCol1);
-    divRow.appendChild(divCol2);
-    divRow.appendChild(divCol3);
-    divRow.appendChild(divCol4);
-    document.getElementById('recipeControls').appendChild(divRow);
-    document.getElementById(ingredientNameSelectId).onchange = () => {updateUnitOfMeasurementSelect(ingredientNameSelectId, select.id);}
-    updateUnitOfMeasurementSelect(ingredientNameSelectId, select.id);
+    const ingredientRow = createIngredientRow(recipeIngredientCount);
+    document.getElementById('recipeControls').appendChild(ingredientRow);
+    updateUnitOfMeasurementSelect(`ingredientName${recipeIngredientCount}`, `ingredientType${recipeIngredientCount}`, `ingredientUnitOfMeasureSelect${recipeIngredientCount}`);
 }
 
-function updateUnitOfMeasurementSelect(ingredientNameId, selectId){
-    let matchingIngredient = getIngredientByName(document.getElementById(ingredientNameId).value);
-    let select = document.getElementById(selectId);
-    if(matchingIngredient != null){
-
-
-        select.innerHTML = '';
-
-        if(matchingIngredient.unitOfMeasure == "unit"){
-            let optionUnit = document.createElement('option');
-            optionUnit.value = UnitsOfMeasure.Unit;
-            optionUnit.innerText = UnitsOfMeasure.Unit;
-            select.appendChild(optionUnit);
-        }
-        else if(matchingIngredient.type == "fluid"){
-            let optionCup = document.createElement('option');
-            optionCup.value = UnitsOfMeasure.Cup;
-            optionCup.innerText = UnitsOfMeasure.Cup;
-            select.appendChild(optionCup);
-
-            let optionGallon = document.createElement('option');
-            optionGallon.value = UnitsOfMeasure.Gallon;
-            optionGallon.innerText = UnitsOfMeasure.Gallon;
-            select.appendChild(optionGallon);
-
-            let optionGram = document.createElement('option');
-            optionGram.value = UnitsOfMeasure.Gram;
-            optionGram.innerText = UnitsOfMeasure.Gram;
-            select.appendChild(optionGram);
-
-            let optionMillileter = document.createElement('option');
-            optionMillileter.value = UnitsOfMeasure.Millileter;
-            optionMillileter.innerText = UnitsOfMeasure.Millileter;
-            select.appendChild(optionMillileter);
-            
-            let optionOunce = document.createElement('option');
-            optionOunce.value = UnitsOfMeasure.Ounce;
-            optionOunce.innerText = UnitsOfMeasure.Ounce;
-            select.appendChild(optionOunce);
-
-            let optionPint = document.createElement('option');
-            optionPint.value = UnitsOfMeasure.Pint;
-            optionPint.innerText = UnitsOfMeasure.Pint;
-            select.appendChild(optionPint);
-
-            let optionQuart = document.createElement('option');
-            optionQuart.value = UnitsOfMeasure.Quart;
-            optionQuart.innerText = UnitsOfMeasure.Quart;
-            select.appendChild(optionQuart);
-
-            let optionTablespoon = document.createElement('option');
-            optionTablespoon.value = UnitsOfMeasure.Tablespoon;
-            optionTablespoon.innerText = UnitsOfMeasure.Tablespoon;
-            select.appendChild(optionTablespoon);
-
-            let optionTeaspoon = document.createElement('option');
-            optionTeaspoon.value = UnitsOfMeasure.Teaspoon;
-            optionTeaspoon.innerText = UnitsOfMeasure.Teaspoon;
-            select.appendChild(optionTeaspoon);
-        }
-        else if(matchingIngredient.type == "dry"){
-            let optionCup = document.createElement('option');
-            optionCup.value = UnitsOfMeasure.Cup;
-            optionCup.innerText = UnitsOfMeasure.Cup;
-            select.appendChild(optionCup);
-
-            let optionGram = document.createElement('option');
-            optionGram.value = UnitsOfMeasure.Gram;
-            optionGram.innerText = UnitsOfMeasure.Gram;
-            select.appendChild(optionGram);
-
-            let optionPound = document.createElement('option');
-            optionPound.value = UnitsOfMeasure.Pound;
-            optionPound.innerText = UnitsOfMeasure.Pound;
-            select.appendChild(optionPound);
-
-            let optionOunce = document.createElement('option');
-            optionOunce.value = UnitsOfMeasure.Ounce;
-            optionOunce.innerText = UnitsOfMeasure.Ounce;
-            select.appendChild(optionOunce);
-
-            let optionTablespoon = document.createElement('option');
-            optionTablespoon.value = UnitsOfMeasure.Tablespoon;
-            optionTablespoon.innerText = UnitsOfMeasure.Tablespoon;
-            select.appendChild(optionTablespoon);
-
-            let optionTeaspoon = document.createElement('option');
-            optionTeaspoon.value = UnitsOfMeasure.Teaspoon;
-            optionTeaspoon.innerText = UnitsOfMeasure.Teaspoon;
-            select.appendChild(optionTeaspoon);
-        }
-        select.className='form-control';
-        return select;
-    }
+function removeIngredientRow(rowNumber) {
+    document.getElementById(`ingredientRow${rowNumber}`).remove();
 }
 
-function updateAddIngredientUnitOfMeasureDropdown(){
-    let select = document.getElementById('newIngredientUnitOfMeasure');
-    let newIngredientType = document.getElementById('newIngredientType');
-
-    select.innerHTML = '';
-    if(newIngredientType.value == "fluid"){
-        let optionCup = document.createElement('option');
-        optionCup.value = UnitsOfMeasure.Cup;
-        optionCup.innerText = UnitsOfMeasure.Cup;
-        select.appendChild(optionCup);
-
-        let optionGallon = document.createElement('option');
-        optionGallon.value = UnitsOfMeasure.Gallon;
-        optionGallon.innerText = UnitsOfMeasure.Gallon;
-        select.appendChild(optionGallon);
-
-        let optionGram = document.createElement('option');
-        optionGram.value = UnitsOfMeasure.Gram;
-        optionGram.innerText = UnitsOfMeasure.Gram;
-        select.appendChild(optionGram);
-
-        let optionMillileter = document.createElement('option');
-        optionMillileter.value = UnitsOfMeasure.Millileter;
-        optionMillileter.innerText = UnitsOfMeasure.Millileter;
-        select.appendChild(optionMillileter);
-        
-        let optionOunce = document.createElement('option');
-        optionOunce.value = UnitsOfMeasure.Ounce;
-        optionOunce.innerText = UnitsOfMeasure.Ounce;
-        select.appendChild(optionOunce);
-
-        let optionPint = document.createElement('option');
-        optionPint.value = UnitsOfMeasure.Pint;
-        optionPint.innerText = UnitsOfMeasure.Pint;
-        select.appendChild(optionPint);
-
-        let optionQuart = document.createElement('option');
-        optionQuart.value = UnitsOfMeasure.Quart;
-        optionQuart.innerText = UnitsOfMeasure.Quart;
-        select.appendChild(optionQuart);
-
-        let optionTablespoon = document.createElement('option');
-        optionTablespoon.value = UnitsOfMeasure.Tablespoon;
-        optionTablespoon.innerText = UnitsOfMeasure.Tablespoon;
-        select.appendChild(optionTablespoon);
-
-        let optionTeaspoon = document.createElement('option');
-        optionTeaspoon.value = UnitsOfMeasure.Teaspoon;
-        optionTeaspoon.innerText = UnitsOfMeasure.Teaspoon;
-        select.appendChild(optionTeaspoon);
-
-        let optionUnit = document.createElement('option');
-            optionUnit.value = UnitsOfMeasure.Unit;
-            optionUnit.innerText = UnitsOfMeasure.Unit;
-            select.appendChild(optionUnit);
-    }
-    else if(newIngredientType.value == "dry"){
-        let optionCup = document.createElement('option');
-        optionCup.value = UnitsOfMeasure.Cup;
-        optionCup.innerText = UnitsOfMeasure.Cup;
-        select.appendChild(optionCup);
-
-        let optionGram = document.createElement('option');
-        optionGram.value = UnitsOfMeasure.Gram;
-        optionGram.innerText = UnitsOfMeasure.Gram;
-        select.appendChild(optionGram);
-
-        let optionPound = document.createElement('option');
-        optionPound.value = UnitsOfMeasure.Pound;
-        optionPound.innerText = UnitsOfMeasure.Pound;
-        select.appendChild(optionPound);
-
-        let optionOunce = document.createElement('option');
-        optionOunce.value = UnitsOfMeasure.Ounce;
-        optionOunce.innerText = UnitsOfMeasure.Ounce;
-        select.appendChild(optionOunce);
-
-        let optionTablespoon = document.createElement('option');
-        optionTablespoon.value = UnitsOfMeasure.Tablespoon;
-        optionTablespoon.innerText = UnitsOfMeasure.Tablespoon;
-        select.appendChild(optionTablespoon);
-
-        let optionTeaspoon = document.createElement('option');
-        optionTeaspoon.value = UnitsOfMeasure.Teaspoon;
-        optionTeaspoon.innerText = UnitsOfMeasure.Teaspoon;
-        select.appendChild(optionTeaspoon);
-
-        let optionUnit = document.createElement('option');
-            optionUnit.value = UnitsOfMeasure.Unit;
-            optionUnit.innerText = UnitsOfMeasure.Unit;
-            select.appendChild(optionUnit);
-    }
-
-
+function getRecipeByName(recipeName) {
+    const matchingRecipes = recipes.filter((e) => JSON.parse(e).name == recipeName);
+    return matchingRecipes.length > 0 ? JSON.parse(matchingRecipes[0]) : null;
 }
 
-function createUnitOfMeasurementDropdown(){
-    let select = document.createElement('select');
+function getIngredientByName(ingredientName) {
+    const matchingIngredients = ingredients.filter((e) => JSON.parse(e).name == ingredientName);
+    return matchingIngredients.length > 0 ? JSON.parse(matchingIngredients[0]) : null;
+}
 
-    let optionCup = document.createElement('option');
-    optionCup.value = UnitsOfMeasure.Cup;
-    optionCup.innerText = UnitsOfMeasure.Cup;
-    select.appendChild(optionCup);
+function getPackagingByName(packagingName) {
+    const matchingPackagings = packagings.filter((e) => JSON.parse(e).name == packagingName);
+    return matchingPackagings.length > 0 ? JSON.parse(matchingPackagings[0]) : null;
+}
 
-    let optionGallon = document.createElement('option');
-    optionGallon.value = UnitsOfMeasure.Gallon;
-    optionGallon.innerText = UnitsOfMeasure.Gallon;
-    select.appendChild(optionGallon);
+function calculateIngredientCost(ingredient, amount) {
+    const matchingIngredient = getIngredientByName(ingredient.name);
 
-    let optionGram = document.createElement('option');
-    optionGram.value = UnitsOfMeasure.Gram;
-    optionGram.innerText = UnitsOfMeasure.Gram;
-    select.appendChild(optionGram);
+    if (matchingIngredient.unitOfMeasure === "Unit") {
+        return (amount * matchingIngredient.cost) / matchingIngredient.amount;
+    } else if (matchingIngredient.type === "Fluid") {
+        const convertedAmount = convertVolume(amount, ingredient.unitOfMeasure, matchingIngredient.unitOfMeasure);
+        return (convertedAmount * matchingIngredient.cost) / matchingIngredient.amount;
+    } else if (matchingIngredient.type === "Dry") {
+        const convertedAmount = convertWeight(amount, ingredient.unitOfMeasure, matchingIngredient.unitOfMeasure);
+        return (convertedAmount * matchingIngredient.cost) / matchingIngredient.amount;
+    }
 
-    let optionPound = document.createElement('option');
-    optionPound.value = UnitsOfMeasure.Pound;
-    optionPound.innerText = UnitsOfMeasure.Pound;
-    select.appendChild(optionPound);
+    return 0;
+}
 
-    let optionMillileter = document.createElement('option');
-    optionMillileter.value = UnitsOfMeasure.Millileter;
-    optionMillileter.innerText = UnitsOfMeasure.Millileter;
-    select.appendChild(optionMillileter);
-    
-    let optionOunce = document.createElement('option');
-    optionOunce.value = UnitsOfMeasure.Ounce;
-    optionOunce.innerText = UnitsOfMeasure.Ounce;
-    select.appendChild(optionOunce);
+function getRecipePrice(recipeName) {
+    const recipe = getRecipeByName(recipeName);
+    let totalCost = 0;
 
-    let optionPint = document.createElement('option');
-    optionPint.value = UnitsOfMeasure.Pint;
-    optionPint.innerText = UnitsOfMeasure.Pint;
-    select.appendChild(optionPint);
+    for (const ingredient of recipe.ingredients) {
+        totalCost += calculateIngredientCost(ingredient, ingredient.amount);
+    }
 
-    let optionQuart = document.createElement('option');
-    optionQuart.value = UnitsOfMeasure.Quart;
-    optionQuart.innerText = UnitsOfMeasure.Quart;
-    select.appendChild(optionQuart);
+    const packaging = getPackagingByName(recipe.packagingName);
+    totalCost += (packaging.cost * recipe.packagingCount) / packaging.amount;
+    totalCost += hourlyWage * recipe.time;
 
-    let optionTablespoon = document.createElement('option');
-    optionTablespoon.value = UnitsOfMeasure.Tablespoon;
-    optionTablespoon.innerText = UnitsOfMeasure.Tablespoon;
-    select.appendChild(optionTablespoon);
+    return totalCost.toFixed(2);
+}
 
-    let optionTeaspoon = document.createElement('option');
-    optionTeaspoon.value = UnitsOfMeasure.Teaspoon;
-    optionTeaspoon.innerText = UnitsOfMeasure.Teaspoon;
-    select.appendChild(optionTeaspoon);
+function getExistingIngredientNames() {
+    // Extract ingredient names from the 'ingredients' array
+    return ingredients.map((ingredient) => JSON.parse(ingredient).name);
+}
 
-    let optionUnit = document.createElement('option');
-    optionUnit.value = UnitsOfMeasure.Unit;
-    optionUnit.innerText = UnitsOfMeasure.Unit;
-    select.appendChild(optionUnit);
+function capitalize(word) {
+    return word.replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
-    select.className='form-control';
+
+function setHourlyWage() {
+    const hourlyWage = document.getElementById('hourlyWageInput').value;
+    localStorage.setItem('HourlyWage', hourlyWage);
+    window.location.reload();
+}
+
+function populatePackagingSelect() {
+    const packagingSelectContainer = document.getElementById('newRecipePackagingSelectContainer');
+    const select = document.createElement('select');
+    select.className = 'form-control';
+    select.id = 'newRecipePackagingSelect';
+
+    // Extract packaging names from the 'packagings' array
+    packagings.map((packaging) => {
+        const option = document.createElement('option');
+        const packagingName = JSON.parse(packaging).name;
+        option.value = packagingName;
+        option.innerText = packagingName;
+        select.appendChild(option);
+    });
+
+    packagingSelectContainer.appendChild(select);
+}
+
+
+function generateIngredientSelect(ingredientNameSelectId, ingredientTypeId, ingredientUnitOfMeasureSelect) {
+    const select = document.createElement('select');
+    select.className = 'form-control';
+    select.id = ingredientNameSelectId;
+    select.onchange = () => { updateUnitOfMeasurementSelect(ingredientNameSelectId, ingredientTypeId, ingredientUnitOfMeasureSelect) };
+
+    // Extract ingredient names from the 'ingredients' array
+    ingredients.map((ingredient) => {
+        const option = document.createElement('option');
+        const ingredientName = JSON.parse(ingredient).name;
+        option.value = ingredientName;
+        option.innerText = ingredientName;
+        select.appendChild(option);
+    });
+
     return select;
-};
+}
+
+function removeOptions(selectElement) {
+    const L = selectElement.querySelectorAll('option').length - 1;
+    for(let i = L; i >= 0; i--) {
+       selectElement.remove(i);
+    }
+}
+
+function updateUnitOfMeasurementSelect(ingredientNameId, ingredientTypeId, unitOfMeasureSelectId) {
+    const matchingIngredient = getIngredientByName(document.getElementById(ingredientNameId).value);
+    const ingredientType = document.getElementById(ingredientTypeId)?.value;
+    const unitOfMeasureSelect = document.getElementById(unitOfMeasureSelectId);
+
+    removeOptions(unitOfMeasureSelect);
+
+    const units = {
+        Unit: ['Unit'],
+        Fluid: ['Cup', 'Gallon', 'Gram', 'Milliliter', 'Ounce', 'Pint', 'Quart', 'Tablespoon', 'Teaspoon'],
+        Dry: ['Cup', 'Gram', 'Pound', 'Ounce', 'Tablespoon', 'Teaspoon']
+    };
+
+    let unitOptions;
+    if (matchingIngredient && matchingIngredient.unitOfMeasure === 'Unit') {
+        unitOptions = units['Unit'];
+    } 
+    else if (matchingIngredient) {
+        unitOptions = units[matchingIngredient.type];
+    }
+    else {
+        unitOptions = units[ingredientType] || [];
+        if(ingredientTypeId == 'newIngredientType'){
+            unitOptions.push('Unit');
+        }
+    }
+
+    unitOptions.forEach((unit) => {
+        const option = document.createElement('option');
+        option.value = unit;
+        option.innerText = unit;
+        unitOfMeasureSelect.appendChild(option);
+    });
+}
 
 function convertVolume(value, fromUnit, toUnit) {
     const units = {
-        "ml": 3,
-        "cup": 1,
-        "tbsp": 16,
-        "tsp": 48,
-        "oz": 8,
-        "pint": 0.5,
-        "quart": 0.25,
-        "gallon": 0.0625,
-        "gram": 240
+        "Milliliter": 3,
+        "Cup": 1,
+        "Tablespoon": 16,
+        "Teaspoon": 48,
+        "Ounce": 8,
+        "Pint": 0.5,
+        "Quart": 0.25,
+        "Gallon": 0.0625,
+        "Gram": 240
     };
 
     let fromValue = value / units[fromUnit];
@@ -863,111 +795,16 @@ function convertVolume(value, fromUnit, toUnit) {
 
 function convertWeight(value, fromUnit, toUnit) {
     const units = {
-        "lb": 16,
-        "cup": 4.5,
-        "oz": 1,
-        "tbsp": 2.52,
-        "tsp": 7.56,
-        "gram": 28.35
+        "Pound": 16,
+        "Cup": 4.5,
+        "Ounce": 1,
+        "Tablespoon": 2.52,
+        "Teaspoon": 7.56,
+        "Gram": 28.35
     };
 
     let fromValue = value / units[fromUnit];
     let convertedValue = fromValue * units[toUnit];
 
     return convertedValue;
-}
-
-function getRecipeByName(recipeName){
-    return JSON.parse(recipes.filter(e => e.startsWith(`{\"name\":\"${recipeName}`)));
-}
-
-function getIngredientByName(ingredientName){
-    let ingredient = null
-    if(ingredients.filter(e => e.startsWith(`{\"name\":\"${ingredientName}`)).length > 0){
-        ingredient = ingredients.filter(e => e.startsWith(`{\"name\":\"${ingredientName}`));
-    }
-    return JSON.parse(ingredient);
-}
-
-function getPackagingByName(packagingName){
-    return JSON.parse(packagings.filter(e => e.startsWith(`{\"name\":\"${packagingName}`)));
-}
-
-function getRecipePrice(recipeName){
-    let recipeCost = 0;
-    let recipe = getRecipeByName(recipeName);
-    let recipeIngredients = recipe.ingredients;
-    let packaging = getPackagingByName(recipe.packagingName);
-   
-    for(let i = 0; i < recipeIngredients.length; i++){
-        let matchingIngredient = getIngredientByName(recipeIngredients[i].name);
-
-        if(matchingIngredient.unitOfMeasure == "unit"){
-            recipeCost += recipeIngredients[i].amount * matchingIngredient.cost / matchingIngredient.amount;
-        }
-        else if(matchingIngredient.type == "fluid"){
-            let convertedAmount = convertVolume(recipeIngredients[i].amount, recipeIngredients[i].unitOfMeasure, matchingIngredient.unitOfMeasure);
-            recipeCost += convertedAmount * matchingIngredient.cost / matchingIngredient.amount;
-        }
-        else if(matchingIngredient.type == "dry"){
-            let convertedAmount = convertWeight(recipeIngredients[i].amount, recipeIngredients[i].unitOfMeasure, matchingIngredient.unitOfMeasure);
-            recipeCost += convertedAmount * matchingIngredient.cost / matchingIngredient.amount;
-        }
-    }
-    recipeCost += packaging.cost * recipe.packagingCount / packaging.amount;
-    recipeCost += hourlyWage * recipe.time;
-    return recipeCost.toFixed(2);
-}
-
-function getExistingIngredientNames(){
-    let existingIngredientNames = [];
-    for(let i = 0; i < ingredients.length; i++){
-        existingIngredientNames.push(JSON.parse(ingredients[i]).name);
-    }
-    return existingIngredientNames;
-}
-
-function capitalize(word){
-    if(word == ''){
-        return '';
-    }
-    let words = word.split(" ");
-    for (let i = 0; i < words.length; i++) {
-        words[i] = words[i][0].toUpperCase() + words[i].substr(1).toLowerCase();
-    }
-    return words.join(" ");
-}
-
-function setHourlyWage(){
-    let hourlyWage = document.getElementById('hourlyWageInput').value;
-    localStorage.setItem("HourlyWage", hourlyWage);
-    window.location.reload();
-}
-
-function populatePackagingSelect(){
-    let packagingSelectContainer = document.getElementById('newRecipePackagingSelectContainer');
-    let select = document.createElement('select');
-    select.className = 'form-control';
-    select.id = 'newRecipePackagingSelect';
-    for(let i = 0; i < packagings.length; i++){
-        let option = document.createElement('option');
-        option.value = JSON.parse(packagings[i]).name;
-        option.innerText = JSON.parse(packagings[i]).name;
-        select.appendChild(option);
-    }
-    packagingSelectContainer.appendChild(select);
-
-}
-
-function generateIngredientSelect(ingredientNameSelectId){
-    let select = document.createElement('select');
-    select.className = 'form-control';
-    select.id = ingredientNameSelectId;
-    for(let i = 0; i < ingredients.length; i++){
-        let option = document.createElement('option');
-        option.value = JSON.parse(ingredients[i]).name;
-        option.innerText = JSON.parse(ingredients[i]).name;
-        select.appendChild(option);
-    }
-    return select;
 }
