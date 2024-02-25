@@ -831,8 +831,8 @@ function convertVolume(value, fromUnit, toUnit) {
 
 function convertWeight(value, fromUnit, toUnit) {
     const units = {
-        "Pound": 16,
-        "Cup": 4.5,
+        "Pound": 0.0625,
+        "Cup": 0.222,
         "Ounce": 1,
         "Tablespoon": 2.52,
         "Teaspoon": 7.56,
