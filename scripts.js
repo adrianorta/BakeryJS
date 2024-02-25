@@ -373,7 +373,7 @@ function addRecipe(e) {
 
     for (let i = 0; i < recipeIngredientRowElements.length; i++) {
         const ingredientId = recipeIngredientRowElements[i].id;
-        let ingredientIndex = ingredientId.charAt(ingredientId.length - 1);
+        const ingredientIndex = ingredientId.split("ingredientRow")[1];
         recipeIngredients.push(addIngredientToRecipe(ingredientIndex));
     }
     const recipeIngredientsString = recipeIngredients.join('').slice(0, -1);
