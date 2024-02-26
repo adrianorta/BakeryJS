@@ -26,7 +26,7 @@
                     <a class="nav-link" href="./packaging.html">Packaging</a>
                 </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href="./addUpdate.html">Add and Update</a>
+                    <a class="nav-link" href="./addUpdate.html">Add Stuff</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="./settings.html">Settings</a>
@@ -34,7 +34,6 @@
             </ul>
         </div>
     </nav>
-        <div class="text-center mt-4"><h2>Add and Update</h2></div>
     <div class="p-3 form-group">
         <div class="card-deck py-2 mb-3">
             <div id="addIngredientCard" class="p-3 form-group bg-custom-dark card">
@@ -49,13 +48,10 @@
                                 <input id="newIngredientName" class="form-control" type="text" placeholder="Name">
                                 <label for="newIngredientName">Name</label>
                             </div>
+                            
                             <div class="col form-floating">
                                 <input id="newIngredientAmount" class="form-control" type="number" placeholder="Amount">
                                 <label for="newIngredientAmount">Amount</label>
-                            </div>
-                            <div class="col form-floating" id="newIngredientCostColumn">
-                                <input id="newIngredientCost" class="form-control" type="number" placeholder="Cost">
-                                <label for="newIngredientCost">Cost</label>
                             </div>
                             <div class="col form-floating" id="newIngredientTypeColumn">
                                 <select id="newIngredientType" class="form-control">
@@ -64,6 +60,11 @@
                                 </select>
                                 <label for="newIngredientType">Type</label>
                             </div>
+                            <div class="col form-floating" id="newIngredientCostColumn">
+                                <input id="newIngredientCost" class="form-control" type="number" placeholder="Cost">
+                                <label for="newIngredientCost">Cost</label>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -108,15 +109,23 @@
                     <p id="errorTextRecipe" class="vertical-align-error-text-in-div">Error Banner</p>
                 </div>
                 <div class="form-group">
-                    <div id="recipeControls">
-                        <div class="form-floating form-group">
-                            <input id="newRecipeName" class="form-control" type="text" placeholder="Name" required="true">
-                            <label for="newRecipeName">Name</label>
-                        </div>
+                    <div class="form-floating form-group">
+                        <input id="newRecipeName" class="form-control" type="text" placeholder="Name" required="true">
+                        <label for="newRecipeName">Name</label>
+                    </div>
+                    <div id="recipeIngredientControls">
+                        
                     </div>
                     <div class="form-group text-center">
                         <button type="button" class="btn btn-success" onclick="addRecipeIngredientControls()"><i class="fa-solid fa-plus"></i></button>
                     </div>
+                    <div id="recipePackagingControls">
+                        
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="button" class="btn btn-success" onclick="addRecipePackagingControls()"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+
                     <div class="form-row form-group">
                         <div class="col form-floating ">
                             <input id="newRecipeServings" type="number" class="form-control" placeholder="Servings" required="true">
@@ -126,13 +135,8 @@
                             <input id="newRecipeTime" type="number" class="form-control" placeholder="Hours" required="true">
                             <label for="newRecipeTime">Hours</label>
                         </div>
-                        <div class="col form-floating" id="newRecipePackagingSelectContainer">
-                        </div>
-                        <div class="col form-floating" >
-                            <input id="newRecipePackagingCount" class="form-control" type="number" placeholder="Package Count" required="true">
-                            <label for="newRecipePackagingCount">Package Count</label>
-                        </div>
                     </div>
+
                     <div class="form-group form-floating">
                         <textarea id="newRecipeNotes" class="form-control" placeholder="Notes..."></textarea>
                         <label for="newRecipeNotes">Notes...</label>

@@ -37,6 +37,7 @@ let ingredients = JSON.parse(localStorage.getItem("Ingredients"));
 let packagings = JSON.parse(localStorage.getItem("Packagings"));
 let hourlyWage = parseFloat(localStorage.getItem("HourlyWage"));
 let recipeIngredientCount = 0;
+let recipePackagingCount = 0;
 let ingredientsList = [];
 
 // UI-related code
@@ -44,18 +45,19 @@ if (document.getElementById("addRecipeCard")) {
     if(ingredients.length > 0){
         addRecipeIngredientControls();
     }
+    if(packagings.length > 0){
+        addRecipePackagingControls();
+    }
     addUnitOfMeasureToIngredientControls();
     document.getElementById("addRecipe").onclick = addRecipe;
     document.getElementById("addIngredient").onclick = addIngredient;
     document.getElementById("addPackaging").onclick = addPackaging;
-    populatePackagingSelect();
     document.getElementById("newIngredientType").onchange = () => { updateUnitOfMeasurementSelect('newIngredientName', 'newIngredientType', 'newIngredientUnitOfMeasure'); };
     updateUnitOfMeasurementSelect('newIngredientName', 'newIngredientType', 'newIngredientUnitOfMeasure');
 }
 
 if (document.getElementById("recipeContent")) {
     displayRecipes();
-    populatePackagingSelect();
     document.getElementById("filter").onkeyup = displayRecipes;
 }
 
@@ -63,10 +65,12 @@ if (document.getElementById("ingredientContent")) {
     displayIngredients();
     addUnitOfMeasureToIngredientControls();
     document.getElementById("newIngredientType").onchange = () => { updateUnitOfMeasurementSelect('newIngredientName', 'newIngredientType', 'newIngredientUnitOfMeasure'); };
+    document.getElementById("filter").onkeyup = displayIngredients;
 }
 
 if (document.getElementById("packagingContent")) {
     displayPackagings();
+    document.getElementById("filter").onkeyup = displayPackagings;
 }
 
 // Update hourly wage display
@@ -100,29 +104,34 @@ function createRecipeCard(recipe) {
     const recipeCardBody = document.createElement('div');
     recipeCardBody.className = 'card-body';
 
-    const recipeCardTitle = document.createElement('h3');
+    const recipeCardTitle = document.createElement('a');
     recipeCardTitle.className = 'card-title';
     recipeCardTitle.innerText = recipe.name;
+    recipeCardTitle.setAttribute('data-toggle', 'collapse');
+    recipeCardTitle.setAttribute('href', `#card-collapse${(recipe.name).replace(/\s/g, "")}`);
     recipeCardBody.appendChild(recipeCardTitle);
-
+    
     const recipeServings = document.createElement('p');
     recipeServings.innerText = `${recipe.servings} servings`;
     recipeServings.className = 'text-muted font-italic';
     recipeCardBody.appendChild(recipeServings);
 
-    recipe.servings
+    const recipeCardCollapse = document.createElement('div');
+    recipeCardCollapse.className = 'collapse';
+    recipeCardCollapse.id = `card-collapse${(recipe.name).replace(/\s/g, "")}`;
 
     for (const ingredient of recipe.ingredients) {
         const recipeCardIngredient = document.createElement('p');
         recipeCardIngredient.innerText = `${ingredient.amount} ${ingredient.unitOfMeasure}(s) of ${ingredient.name}`;
         recipeCardIngredient.className = 'card-text';
-        recipeCardBody.appendChild(recipeCardIngredient);
+        recipeCardCollapse.appendChild(recipeCardIngredient);
     }
 
     const recipeNotes = document.createElement('p');
     recipeNotes.innerText = `Notes:\n${recipe.notes}`;
-    recipeNotes.className = 'text-muted font-italic';
-    recipeCardBody.appendChild(recipeNotes);
+    recipeNotes.className = 'text-muted font-italic card-text';
+    recipeCardCollapse.appendChild(recipeNotes);
+    recipeCardBody.appendChild(recipeCardCollapse);
 
     const updateButton = document.createElement('button');
     updateButton.className = 'btn btn-info mr-2';
@@ -158,12 +167,13 @@ function createRecipeCard(recipe) {
     recipePricePerServingElement.className = "text-success"
     const recipePricePerServing = (recipePrice / recipe.servings).toFixed(2);
     recipePricePerServingElement.innerText =`(\$${recipePricePerServing} per serving)`;
-
+    
+    
     recipeCardBody.appendChild(recipePriceElement);
     recipeCardBody.appendChild(recipePricePerServingElement);
     cardFooter.appendChild(updateButton);
     cardFooter.appendChild(deleteButton);
-
+    
     recipeCard.appendChild(recipeCardBody);
     recipeCard.appendChild(cardFooter);
     return recipeCard;
@@ -253,8 +263,11 @@ function createIngredientCardRow(rowId) {
 }
 
 function displayIngredients() {
-    for (let i = 0; i < ingredients.length; i++) {
-        const ingredientJSONObject = JSON.parse(ingredients[i]);
+    const filter = capitalize(document.getElementById('filter').value)
+    const displayedIngredients = ingredients.filter((ingredient) => ingredient.startsWith(`{"name":"${filter}`));
+    document.getElementById('ingredientContent').innerHTML = '';
+    for (let i = 0; i < displayedIngredients.length; i++) {
+        const ingredientJSONObject = JSON.parse(displayedIngredients[i]);
         const ingredientCardRowId = `ingredientCardRow${Math.floor(i / 3)}`;
 
         if (i % 3 === 0) {
@@ -326,8 +339,11 @@ function createPackagingCardRow(rowId) {
 }
 
 function displayPackagings() {
-    for (let i = 0; i < packagings.length; i++) {
-        const packagingJSONObject = JSON.parse(packagings[i]);
+    const filter = capitalize(document.getElementById('filter').value)
+    const displayedPackagings = packagings.filter((packaging) => packaging.startsWith(`{"name":"${filter}`));
+    document.getElementById('packagingContent').innerHTML = '';
+    for (let i = 0; i < displayedPackagings.length; i++) {
+        const packagingJSONObject = JSON.parse(displayedPackagings[i]);
         const packagingCardRowId = `packagingCardRow${Math.floor(i / 3)}`;
 
         if (i % 3 === 0) {
@@ -348,6 +364,12 @@ function addIngredientToRecipe(ingredientIndex) {
     return `{"name":"${ingredientName}","amount":"${ingredientAmount}","unitOfMeasure":"${ingredientUnitOfMeasure}"},`;
 }
 
+function addPackagingToRecipe(packagingIndex) {
+    const packagingName = capitalize(document.getElementById(`packagingName${packagingIndex}`).value);
+    const packagingAmount = document.getElementById(`packagingAmount${packagingIndex}`).value;
+    return `{"name":"${packagingName}","amount":"${packagingAmount}"},`;
+}
+
 function checkRequiredFields(id) {
     for (const el of document.getElementById(id).querySelectorAll('[required]')) {
         if (el.value === '') {
@@ -364,10 +386,9 @@ function addRecipe(e) {
     const recipeNotes = document.getElementById('newRecipeNotes').value;
     const recipeTime = document.getElementById('newRecipeTime').value;
     const recipeServings = document.getElementById('newRecipeServings').value;
-    const packagingName = capitalize(document.getElementById('newRecipePackagingSelect').value);
-    const packagingCount = document.getElementById('newRecipePackagingCount').value;
 
     const recipeIngredients = [];
+    const recipePackaging = [];
     //get each ingredient row
     let recipeIngredientRowElements = document.querySelectorAll("[id^='ingredientRow']");
 
@@ -378,7 +399,16 @@ function addRecipe(e) {
     }
     const recipeIngredientsString = recipeIngredients.join('').slice(0, -1);
 
-    const recipe = `{"name":"${recipeName}","ingredients":[${recipeIngredientsString}],"notes":"${recipeNotes}","time":"${recipeTime}","packagingName":"${packagingName}","packagingCount":"${packagingCount}","servings":"${recipeServings}"}`;
+    let recipePackagingRowElements = document.querySelectorAll("[id^='packagingRow']");
+
+    for (let i = 0; i < recipePackagingRowElements.length; i++) {
+        const packagingId = recipePackagingRowElements[i].id;
+        let packagingIndex = packagingId.charAt(packagingId.length - 1);
+        recipePackaging.push(addPackagingToRecipe(packagingIndex));
+    }
+    const recipePackagingString = recipePackaging.join('').slice(0, -1);
+
+    const recipe = `{"name":"${recipeName}","ingredients":[${recipeIngredientsString}],"notes":"${recipeNotes}","time":"${recipeTime}","packagings":[${recipePackagingString}],"servings":"${recipeServings}"}`;
 
     const recipeExists = recipes.some((recipeItem) => JSON.parse(recipeItem).name === recipeName);
 
@@ -530,6 +560,7 @@ function deletePackagingByName(name) {
 function updateRecipeByName(recipeName) {
     const recipe = getRecipeByName(recipeName);
     const addRecipeIngredientsBtn = document.getElementById('addRecipeIngredientsBtn');
+    const addRecipePackagingsBtn = document.getElementById('addRecipePackagingsBtn');
 
     const ingredientDeleteBtns = document.querySelectorAll('[id^="ingredientDelete"]');
     for (const btn of ingredientDeleteBtns) {
@@ -541,8 +572,6 @@ function updateRecipeByName(recipeName) {
     document.getElementById('newRecipeTime').value = recipe.time;
     document.getElementById('newRecipeServings').value = recipe.servings;
     document.getElementById('newRecipeNotes').value = recipe.notes;
-    document.getElementById('newRecipePackagingSelect').value = recipe.packagingName;
-    document.getElementById('newRecipePackagingCount').value = recipe.packagingCount;
 
     for (let i = 0; i < recipe.ingredients.length; i++) {
         addRecipeIngredientsBtn.click();
@@ -552,6 +581,13 @@ function updateRecipeByName(recipeName) {
         document.getElementById(`ingredientName${recipeIngredientCount}`).dispatchEvent(event);
         document.getElementById(`ingredientAmount${recipeIngredientCount}`).value = currentRecipeIngredient.amount;
         document.getElementById(`ingredientUnitOfMeasureSelect${recipeIngredientCount}`).value = currentRecipeIngredient.unitOfMeasure;
+    }
+
+    for (let i = 0; i < recipe.packagings.length; i++) {
+        addRecipePackagingsBtn.click();
+        const currentRecipePackaging = recipe.packagings[i];
+        document.getElementById(`packagingName${recipePackagingCount}`).value = currentRecipePackaging.name;
+        document.getElementById(`packagingAmount${recipePackagingCount}`).value = currentRecipePackaging.amount;
     }
 
     const modalUpdateBtn = document.getElementById('modalUpdateBtn');
@@ -648,6 +684,43 @@ function createIngredientRow(recipeIngredientCount) {
     return divRow;
 }
 
+function createPackagingRow(recipePackagingCount) {
+    const divRow = document.createElement('div');
+    divRow.className = 'form-row form-group';
+    divRow.id = `packagingRow${recipePackagingCount}`;
+
+    const createCol = (className) => {
+        const divCol = document.createElement('div');
+        divCol.className = className;
+        return divCol;
+    };
+
+    const packagingName = createCol('col form-floating');
+    packagingName.appendChild(generatePackagingSelect(`packagingName${recipePackagingCount}`));
+    const packagingNameLabel = createFloatingLabel(`packagingName${recipePackagingCount}`, "Name");
+    packagingName.appendChild(packagingNameLabel);
+
+    const packagingAmount = createCol('col form-floating');
+    packagingAmount.innerHTML = `
+        <input id="packagingAmount${recipePackagingCount}" class="form-control" type="number" required placeholder="Amount">
+    `;
+    const packagingAmountLabel = createFloatingLabel(`packagingAmount${recipePackagingCount}`, "Amount");
+    packagingAmount.appendChild(packagingAmountLabel);
+
+    const deleteRowButton = createCol('col align-self-center');
+    deleteRowButton.innerHTML = `
+        <button id="packagingDelete${recipePackagingCount}" class="btn btn-danger" onclick="removePackagingRow(${recipePackagingCount})">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    `;
+
+    divRow.appendChild(packagingName);
+    divRow.appendChild(packagingAmount);
+    divRow.appendChild(deleteRowButton);
+
+    return divRow;
+}
+
 function createFloatingLabel(id, text){
     const label = document.createElement('label');
     label.for = id;
@@ -658,12 +731,22 @@ function createFloatingLabel(id, text){
 function addRecipeIngredientControls() {
     recipeIngredientCount++;
     const ingredientRow = createIngredientRow(recipeIngredientCount);
-    document.getElementById('recipeControls').appendChild(ingredientRow);
+    document.getElementById('recipeIngredientControls').appendChild(ingredientRow);
     updateUnitOfMeasurementSelect(`ingredientName${recipeIngredientCount}`, `ingredientType${recipeIngredientCount}`, `ingredientUnitOfMeasureSelect${recipeIngredientCount}`);
+}
+
+function addRecipePackagingControls() {
+    recipePackagingCount++;
+    const packagingRow = createPackagingRow(recipePackagingCount);
+    document.getElementById('recipePackagingControls').appendChild(packagingRow);
 }
 
 function removeIngredientRow(rowNumber) {
     document.getElementById(`ingredientRow${rowNumber}`).remove();
+}
+
+function removePackagingRow(rowNumber) {
+    document.getElementById(`packagingRow${rowNumber}`).remove();
 }
 
 function getRecipeByName(recipeName) {
@@ -697,6 +780,11 @@ function calculateIngredientCost(ingredient, amount) {
     return 0;
 }
 
+function calculatePackagingCost(packaging, amount) {
+    const matchingPackaging = getPackagingByName(packaging.name);
+    return (matchingPackaging.cost * amount) / matchingPackaging.amount;
+}
+
 function getRecipePrice(recipeName) {
     const recipe = getRecipeByName(recipeName);
     let totalCost = 0;
@@ -705,8 +793,10 @@ function getRecipePrice(recipeName) {
         totalCost += calculateIngredientCost(ingredient, ingredient.amount);
     }
 
-    const packaging = getPackagingByName(recipe.packagingName);
-    totalCost += (packaging.cost * recipe.packagingCount) / packaging.amount;
+    for (const packaging of recipe.packagings) {
+        totalCost += calculatePackagingCost(packaging, packaging.amount);
+    }
+
     totalCost += hourlyWage * recipe.time;
 
     return totalCost.toFixed(2);
@@ -728,27 +818,6 @@ function setHourlyWage() {
     window.location.reload();
 }
 
-function populatePackagingSelect() {
-    const packagingSelectContainer = document.getElementById('newRecipePackagingSelectContainer');
-    const select = document.createElement('select');
-    select.className = 'form-control';
-    select.id = 'newRecipePackagingSelect';
-
-    const label = createFloatingLabel(select.id, "Packaging")
-    // Extract packaging names from the 'packagings' array
-    packagings.map((packaging) => {
-        const option = document.createElement('option');
-        const packagingName = JSON.parse(packaging).name;
-        option.value = packagingName;
-        option.innerText = packagingName;
-        select.appendChild(option);
-    });
-
-    packagingSelectContainer.appendChild(select);
-    packagingSelectContainer.appendChild(label);
-}
-
-
 function generateIngredientSelect(ingredientNameSelectId, ingredientTypeId, ingredientUnitOfMeasureSelect) {
     const select = document.createElement('select');
     select.className = 'form-control';
@@ -762,6 +831,24 @@ function generateIngredientSelect(ingredientNameSelectId, ingredientTypeId, ingr
         const ingredientName = JSON.parse(ingredient).name;
         option.value = ingredientName;
         option.innerText = ingredientName;
+        select.appendChild(option);
+    });
+
+    return select;
+}
+
+function generatePackagingSelect(packagingNameSelectId) {
+    const select = document.createElement('select');
+    select.className = 'form-control';
+    select.id = packagingNameSelectId;
+    select.placeholder = "Name";
+
+    // Extract ingredient names from the 'ingredients' array
+    packagings.map((packaging) => {
+        const option = document.createElement('option');
+        const packagingName = JSON.parse(packaging).name;
+        option.value = packagingName;
+        option.innerText = packagingName;
         select.appendChild(option);
     });
 

@@ -26,7 +26,7 @@
                     <a class="nav-link" href="./packaging.html">Packaging</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="./addUpdate.html">Add and Update</a>
+                    <a class="nav-link" href="./addUpdate.html">Add Stuff</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="./settings.html">Settings</a>
@@ -60,14 +60,21 @@
                     <p id="errorTextRecipe" class="vertical-align-error-text-in-div">Error Banner</p>
                 </div>
                 <div class="form-group">
-                    <div id="recipeControls">
-                        <div class="form-floating form-group">
-                            <input id="newRecipeName" class="form-control" type="text" placeholder="Name" required="true">
-                            <label for="newRecipeName">Name</label>
-                        </div>
+                    <div class="form-floating form-group">
+                        <input id="newRecipeName" class="form-control" type="text" placeholder="Name" required="true">
+                        <label for="newRecipeName">Name</label>
+                    </div>
+                    <div id="recipeIngredientControls">
+                        
                     </div>
                     <div class="form-group text-center">
                         <button id="addRecipeIngredientsBtn" type="button" class="btn btn-success" onclick="addRecipeIngredientControls()"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div id="recipePackagingControls">
+                        
+                    </div>
+                    <div class="form-group text-center">
+                        <button id="addRecipePackagingsBtn" type="button" class="btn btn-success" onclick="addRecipePackagingControls()"><i class="fa-solid fa-plus"></i></button>
                     </div>
                     <div class="form-row form-group">
                         <div class="col form-floating">
@@ -77,12 +84,6 @@
                         <div class="col form-floating">
                             <input id="newRecipeTime" type="number" class="form-control" placeholder="Hours" required="true">
                             <label for="newRecipeTime">Hours</label>
-                        </div>
-                        <div class="col form-floating" id="newRecipePackagingSelectContainer">
-                        </div>
-                        <div class="col form-floating" >
-                            <input id="newRecipePackagingCount" class="form-control" type="number" placeholder="Package Count" required="true">
-                            <label for="newRecipePackagingCount">Package Count</label>
                         </div>
                     </div>
                     <div class="form-group form-floating">
