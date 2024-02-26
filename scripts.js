@@ -567,6 +567,11 @@ function updateRecipeByName(recipeName) {
         btn.click();
     }
 
+    const packagingDeleteBtns = document.querySelectorAll('[id^="packagingDelete"]');
+    for (const btn of packagingDeleteBtns) {
+        btn.click();
+    }
+
     document.getElementById('updateModalLabel').innerText = `Update ${recipeName}`;
     document.getElementById('newRecipeName').value = recipe.name;
     document.getElementById('newRecipeTime').value = recipe.time;
@@ -766,15 +771,16 @@ function getPackagingByName(packagingName) {
 
 function calculateIngredientCost(ingredient, amount) {
     const matchingIngredient = getIngredientByName(ingredient.name);
-
-    if (matchingIngredient.unitOfMeasure === "Unit") {
-        return (amount * matchingIngredient.cost) / matchingIngredient.amount;
-    } else if (matchingIngredient.type === "Fluid") {
-        const convertedAmount = convertVolume(amount, ingredient.unitOfMeasure, matchingIngredient.unitOfMeasure);
-        return (convertedAmount * matchingIngredient.cost) / matchingIngredient.amount;
-    } else if (matchingIngredient.type === "Dry") {
-        const convertedAmount = convertWeight(amount, ingredient.unitOfMeasure, matchingIngredient.unitOfMeasure);
-        return (convertedAmount * matchingIngredient.cost) / matchingIngredient.amount;
+    if(matchingIngredient != null){
+        if (matchingIngredient.unitOfMeasure === "Unit") {
+            return (amount * matchingIngredient.cost) / matchingIngredient.amount;
+        } else if (matchingIngredient.type === "Fluid") {
+            const convertedAmount = convertVolume(amount, ingredient.unitOfMeasure, matchingIngredient.unitOfMeasure);
+            return (convertedAmount * matchingIngredient.cost) / matchingIngredient.amount;
+        } else if (matchingIngredient.type === "Dry") {
+            const convertedAmount = convertWeight(amount, ingredient.unitOfMeasure, matchingIngredient.unitOfMeasure);
+            return (convertedAmount * matchingIngredient.cost) / matchingIngredient.amount;
+        }
     }
 
     return 0;
@@ -782,7 +788,11 @@ function calculateIngredientCost(ingredient, amount) {
 
 function calculatePackagingCost(packaging, amount) {
     const matchingPackaging = getPackagingByName(packaging.name);
-    return (matchingPackaging.cost * amount) / matchingPackaging.amount;
+    if(matchingPackaging != null){
+        return (matchingPackaging.cost * amount) / matchingPackaging.amount;
+    }
+    
+    return 0;
 }
 
 function getRecipePrice(recipeName) {
@@ -825,10 +835,10 @@ function generateIngredientSelect(ingredientNameSelectId, ingredientTypeId, ingr
     select.placeholder = "Name";
     select.onchange = () => { updateUnitOfMeasurementSelect(ingredientNameSelectId, ingredientTypeId, ingredientUnitOfMeasureSelect) };
 
-    // Extract ingredient names from the 'ingredients' array
-    ingredients.map((ingredient) => {
+    let ingredientNames = ingredients.map((ingredient => JSON.parse(ingredient).name));
+    ingredientNames.sort();
+    ingredientNames.map((ingredientName) => {
         const option = document.createElement('option');
-        const ingredientName = JSON.parse(ingredient).name;
         option.value = ingredientName;
         option.innerText = ingredientName;
         select.appendChild(option);
@@ -843,10 +853,10 @@ function generatePackagingSelect(packagingNameSelectId) {
     select.id = packagingNameSelectId;
     select.placeholder = "Name";
 
-    // Extract ingredient names from the 'ingredients' array
-    packagings.map((packaging) => {
+    let packagingNames = packagings.map((packaging => JSON.parse(packaging).name));
+    packagingNames.sort();
+    packagingNames.map((packagingName) => {
         const option = document.createElement('option');
-        const packagingName = JSON.parse(packaging).name;
         option.value = packagingName;
         option.innerText = packagingName;
         select.appendChild(option);
