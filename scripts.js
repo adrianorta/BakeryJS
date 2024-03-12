@@ -82,22 +82,90 @@ if (document.getElementById('hourlyWageSpan')) {
 if (document.getElementById('uploadBackup')) {
     document.getElementById('uploadBackup').addEventListener('change', (event) => {
         const myFile = event.target.files[0];
-        const reader = new FileReader();
+        const lastDot = myFile.name.lastIndexOf('.');
+        const ext = myFile.name.substring(lastDot + 1);
 
-        reader.addEventListener('load', (e) => {
-            const output = e.target.result.split('**');
-            localStorage.setItem('Recipes', output[0]);
-            localStorage.setItem('Ingredients', output[1]);
-            localStorage.setItem('Packagings', output[2]);
-            localStorage.setItem('HourlyWage', output[3]);
-            window.location.reload();
-        });
-
-        reader.readAsBinaryString(myFile);
+        if(ext == "pdf"){
+            const pdfFile = event.target.files[0];
+            extractTextFromPDF(pdfFile)
+            .then((text) => {
+                let output = text.split('**');
+                localStorage.setItem('Recipes', output[0]);
+                localStorage.setItem('Ingredients', output[1]);
+                localStorage.setItem('Packagings', output[2]);
+                localStorage.setItem('HourlyWage', output[3]);
+                window.location.reload();
+            })
+            .catch((error) => {
+                console.error('Error extracting text:', error);
+            });
+        }
+        else{
+            uploadTXT(myFile);
+        }
     });
 }
 
-function createRecipeCard(recipe) {
+function extractTextFromPDF(pdfFile) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const pdfData = new Uint8Array(event.target.result);
+            const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+            
+            loadingTask.promise.then(function(pdf) {
+                const numPages = pdf.numPages;
+                let fullText = '';
+                let promises = [];
+                
+                // Iterate through each page of the PDF
+                for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                    promises.push(
+                        pdf.getPage(pageNum).then(function(page) {
+                            // Extract text content from each page
+                            return page.getTextContent().then(function(textContent) {
+                                const textItems = textContent.items;
+                                let pageText = '';
+                                
+                                // Concatenate text items to form text for each page
+                                for (let i = 0; i < textItems.length; i++) {
+                                    pageText += textItems[i].str;
+                                }
+                                
+                                fullText += pageText; // Append page text to full text
+                            });
+                        })
+                    );
+                }
+                
+                // Resolve with the full extracted text when all pages are processed
+                Promise.all(promises).then(() => resolve(fullText));
+            }).catch((error) => reject(error));
+        };
+        
+        reader.readAsArrayBuffer(pdfFile);
+    });
+}
+
+    
+
+function uploadTXT(txtFile){
+    const reader = new FileReader();
+    reader.addEventListener('load', (e) => {
+        const output = e.target.result.split('**');
+        localStorage.setItem('Recipes', output[0]);
+        localStorage.setItem('Ingredients', output[1]);
+        localStorage.setItem('Packagings', output[2]);
+        localStorage.setItem('HourlyWage', output[3]);
+        window.location.reload();
+    });
+
+    reader.readAsBinaryString(txtFile);
+
+}
+
+
+function createRecipeCard(recipe, rowNumber) {
     const recipeCard = document.createElement('div');
     recipeCard.className = 'card display-card';
 
