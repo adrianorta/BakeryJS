@@ -188,13 +188,16 @@ function createRecipeCardRow(rowId) {
 
 function displayRecipes() {
     const filter = capitalize(document.getElementById('filter').value)
-    const displayedRecipes = recipes.filter((recipe) => recipe.startsWith(`{"name":"${filter}`));
+    const displayedRecipes = recipes.filter((recipe) => {
+        const recipeObj = JSON.parse(recipe);
+        return recipeObj.name.toLowerCase().includes(filter.toLowerCase());
+    });
     document.getElementById('recipeContent').innerHTML = '';
     for (let i = 0; i < displayedRecipes.length; i++) {
         const recipeJSONObject = JSON.parse(displayedRecipes[i]);
-        const recipeCardRowId = `recipeCardRow${Math.floor(i / 3)}`;
+        const recipeCardRowId = `recipeCardRow${Math.floor(i / 4)}`;
 
-        if (i % 3 === 0) {
+        if (i % 4 === 0) {
             const newRecipeCardRow = createRecipeCardRow(recipeCardRowId);
             document.getElementById('recipeContent').appendChild(newRecipeCardRow);
         }
@@ -264,13 +267,16 @@ function createIngredientCardRow(rowId) {
 
 function displayIngredients() {
     const filter = capitalize(document.getElementById('filter').value)
-    const displayedIngredients = ingredients.filter((ingredient) => ingredient.startsWith(`{"name":"${filter}`));
+    const displayedIngredients = ingredients.filter((ingredient) => {
+        const ingredientObj = JSON.parse(ingredient);
+        return ingredientObj.name.toLowerCase().includes(filter.toLowerCase());
+    });
     document.getElementById('ingredientContent').innerHTML = '';
     for (let i = 0; i < displayedIngredients.length; i++) {
         const ingredientJSONObject = JSON.parse(displayedIngredients[i]);
-        const ingredientCardRowId = `ingredientCardRow${Math.floor(i / 3)}`;
+        const ingredientCardRowId = `ingredientCardRow${Math.floor(i / 4)}`;
 
-        if (i % 3 === 0) {
+        if (i % 4 === 0) {
             const newIngredientCardRow = createIngredientCardRow(ingredientCardRowId);
             document.getElementById('ingredientContent').appendChild(newIngredientCardRow);
         }
@@ -340,13 +346,16 @@ function createPackagingCardRow(rowId) {
 
 function displayPackagings() {
     const filter = capitalize(document.getElementById('filter').value)
-    const displayedPackagings = packagings.filter((packaging) => packaging.startsWith(`{"name":"${filter}`));
+    const displayedPackagings = packagings.filter((packaging) => {
+        const packagingObj = JSON.parse(packaging);
+        return packagingObj.name.toLowerCase().includes(filter.toLowerCase());
+    });
     document.getElementById('packagingContent').innerHTML = '';
     for (let i = 0; i < displayedPackagings.length; i++) {
         const packagingJSONObject = JSON.parse(displayedPackagings[i]);
-        const packagingCardRowId = `packagingCardRow${Math.floor(i / 3)}`;
+        const packagingCardRowId = `packagingCardRow${Math.floor(i / 4)}`;
 
-        if (i % 3 === 0) {
+        if (i % 4 === 0) {
             const newPackagingCardRow = createPackagingCardRow(packagingCardRowId);
             document.getElementById('packagingContent').appendChild(newPackagingCardRow);
         }
@@ -372,7 +381,7 @@ function addPackagingToRecipe(packagingIndex) {
 
 function checkRequiredFields(id) {
     for (const el of document.getElementById(id).querySelectorAll('[required]')) {
-        if (el.value === '') {
+        if (el.value.trim() === '') {
             document.getElementById('errorBannerRecipe').classList.remove('d-none');
             document.getElementById('errorTextRecipe').innerText = 'You must fill out all required fields!';
             return false;
