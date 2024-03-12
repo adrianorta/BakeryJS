@@ -326,7 +326,7 @@ function updateRecipeDisplay(recipe, adjustmentFactor) {
 
     const recipeCardBody = document.getElementById(`${recipe.name}-card-body`);
     recipeCardBody.querySelector('h3').innerText = `\$${getRecipePrice(recipe.name, adjustmentFactor)}`;
-    recipeCardBody.querySelector('h6').innerText = `(\$${(getRecipePrice(recipe.name, adjustmentFactor)/recipe.servings*adjustmentFactor).toFixed(2)} per serving)`;
+    recipeCardBody.querySelector('h6').innerText = `(\$${(getRecipePrice(recipe.name, adjustmentFactor)/(recipe.servings*adjustmentFactor)).toFixed(2)} per serving)`;
     recipeCardBody.querySelector('.text-muted').innerText = `${recipe.servings*adjustmentFactor} servings`;
 }
 
