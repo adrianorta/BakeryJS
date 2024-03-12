@@ -103,6 +103,7 @@ function createRecipeCard(recipe) {
 
     const recipeCardBody = document.createElement('div');
     recipeCardBody.className = 'card-body';
+    recipeCardBody.id = `${recipe.name}-card-body`;
 
     const recipeCardTitle = document.createElement('a');
     recipeCardTitle.className = 'card-title';
@@ -168,22 +169,97 @@ function createRecipeCard(recipe) {
     const recipePricePerServing = (recipePrice / recipe.servings).toFixed(2);
     recipePricePerServingElement.innerText =`(\$${recipePricePerServing} per serving)`;
     
-    
+    // Create checkboxes for halving, doubling, and tripling ingredients
+    const checkboxContainer = document.createElement('div');
+    const halfCheckbox = createAdjustmentCheckbox('half', '0.5x', recipe.name);
+    const singleCheckbox = createAdjustmentCheckbox('single', '1x', recipe.name);
+    const doubleCheckbox = createAdjustmentCheckbox('double', '2x', recipe.name);
+    const oneAndHalfCheckbox = createAdjustmentCheckbox('oneAndHalf', '1.5x', recipe.name);
+    const tripleCheckbox = createAdjustmentCheckbox('triple', '3x', recipe.name);
+
+    checkboxContainer.appendChild(halfCheckbox);
+    checkboxContainer.appendChild(singleCheckbox);
+    checkboxContainer.appendChild(oneAndHalfCheckbox);
+    checkboxContainer.appendChild(doubleCheckbox);
+    checkboxContainer.appendChild(tripleCheckbox);
+
     recipeCardBody.appendChild(recipePriceElement);
     recipeCardBody.appendChild(recipePricePerServingElement);
+    cardFooter.appendChild(checkboxContainer);
     cardFooter.appendChild(updateButton);
     cardFooter.appendChild(deleteButton);
+    
     
     recipeCard.appendChild(recipeCardBody);
     recipeCard.appendChild(cardFooter);
     return recipeCard;
 }
 
+function createAdjustmentCheckbox(idSuffix, label, recipeName) {
+    let container = document.createElement('span');
+    container.classList.add("mr-2");
+    container.classList.add("mb-2");
+    let checkbox = document.createElement('input');
+    checkbox.className = "mr-1";
+    checkbox.type = 'radio';
+    checkbox.id = `adjust-${idSuffix}-${recipeName}`;
+    checkbox.name = `adjustment-${recipeName}`;
+    checkbox.value = label;
+    checkbox.onchange = handleAdjustmentChange; // Function to handle the change event
+  
+    const checkboxLabel = document.createElement('label');
+    checkboxLabel.htmlFor = `adjust-${idSuffix}`;
+    checkboxLabel.textContent = label;
+  
+    container.appendChild(checkbox);
+    container.appendChild(checkboxLabel);
+  
+    return container;
+  }
+
+  function handleAdjustmentChange(event) {
+    const adjustmentType = event.target.value;
+    const recipeName = event.target.closest('.card').querySelector('.card-title').innerText;
+    const recipe = getRecipeByName(recipeName); // Function to retrieve the recipe object by name
+  
+    let adjustmentFactor;
+    switch (adjustmentType) {
+      case '0.5x':
+        adjustmentFactor = 0.5;
+        break;
+      case '2x':
+        adjustmentFactor = 2;
+        break;
+      case '1.5x':
+        adjustmentFactor = 1.5;
+        break;
+      case '3x':
+        adjustmentFactor = 3;
+        break;
+    case '1x':
+        adjustmentFactor = 1;
+        break;
+      default:
+        adjustmentFactor = 1; // No adjustment
+    }
+  
+    // Update the displayed ingredients and prices based on the adjustment factor
+    updateRecipeDisplay(recipe, adjustmentFactor);
+  }
+
 function createRecipeCardRow(rowId) {
     const newRecipeCardRow = document.createElement('div');
     newRecipeCardRow.className = 'card-deck py-2';
     newRecipeCardRow.id = rowId;
     return newRecipeCardRow;
+}
+
+function updateRecipeDisplay(recipe, adjustmentFactor) {
+
+    const recipeCardBody = document.getElementById(`${recipe.name}-card-body`);
+    recipeCardBody.querySelector('h3').innerText = `\$${getRecipePrice(recipe.name, adjustmentFactor)}`;
+    recipeCardBody.querySelector('h6').innerText = `(\$${(getRecipePrice(recipe.name, adjustmentFactor)/recipe.servings*adjustmentFactor).toFixed(2)} per serving)`;
+    recipeCardBody.querySelector('.text-muted').innerText = `${recipe.servings*adjustmentFactor} servings`;
 }
 
 function displayRecipes() {
@@ -764,7 +840,7 @@ function removePackagingRow(rowNumber) {
 }
 
 function getRecipeByName(recipeName) {
-    const matchingRecipes = recipes.filter((e) => JSON.parse(e).name == recipeName);
+    const matchingRecipes = recipes.filter((e) => JSON.parse(e).name.toLowerCase() == recipeName.toLowerCase());
     return matchingRecipes.length > 0 ? JSON.parse(matchingRecipes[0]) : null;
 }
 
@@ -804,7 +880,7 @@ function calculatePackagingCost(packaging, amount) {
     return 0;
 }
 
-function getRecipePrice(recipeName) {
+function getRecipePrice(recipeName, adjustmentFactor = 1) {
     const recipe = getRecipeByName(recipeName);
     let totalCost = 0;
 
@@ -815,6 +891,8 @@ function getRecipePrice(recipeName) {
     for (const packaging of recipe.packagings) {
         totalCost += calculatePackagingCost(packaging, packaging.amount);
     }
+
+    totalCost *= adjustmentFactor;
 
     totalCost += hourlyWage * recipe.time;
 
