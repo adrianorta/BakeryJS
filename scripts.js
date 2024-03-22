@@ -239,12 +239,14 @@ function createRecipeCard(recipe, rowNumber) {
     
     // Create checkboxes for halving, doubling, and tripling ingredients
     const checkboxContainer = document.createElement('div');
+    const quarterCheckbox = createAdjustmentCheckbox('quarter', '0.25x', recipe.name);
     const halfCheckbox = createAdjustmentCheckbox('half', '0.5x', recipe.name);
     const singleCheckbox = createAdjustmentCheckbox('single', '1x', recipe.name);
     const doubleCheckbox = createAdjustmentCheckbox('double', '2x', recipe.name);
     const oneAndHalfCheckbox = createAdjustmentCheckbox('oneAndHalf', '1.5x', recipe.name);
     const tripleCheckbox = createAdjustmentCheckbox('triple', '3x', recipe.name);
 
+    checkboxContainer.appendChild(quarterCheckbox);
     checkboxContainer.appendChild(halfCheckbox);
     checkboxContainer.appendChild(singleCheckbox);
     checkboxContainer.appendChild(oneAndHalfCheckbox);
@@ -292,6 +294,9 @@ function createAdjustmentCheckbox(idSuffix, label, recipeName) {
   
     let adjustmentFactor;
     switch (adjustmentType) {
+      case '0.25x':
+        adjustmentFactor = 0.25;
+        break;
       case '0.5x':
         adjustmentFactor = 0.5;
         break;
@@ -326,7 +331,7 @@ function updateRecipeDisplay(recipe, adjustmentFactor) {
 
     const recipeCardBody = document.getElementById(`${recipe.name}-card-body`);
     recipeCardBody.querySelector('h3').innerText = `\$${getRecipePrice(recipe.name, adjustmentFactor)}`;
-    recipeCardBody.querySelector('h6').innerText = `(\$${(getRecipePrice(recipe.name, adjustmentFactor)/(recipe.servings*adjustmentFactor)).toFixed(2)} per serving)`;
+    recipeCardBody.querySelector('h6').innerText = `(\$${(getRecipePrice(recipe.name, adjustmentFactor)/recipe.servings*adjustmentFactor).toFixed(2)} per serving)`;
     recipeCardBody.querySelector('.text-muted').innerText = `${recipe.servings*adjustmentFactor} servings`;
 }
 
@@ -447,6 +452,11 @@ function createPackagingCard(packaging) {
     packagingCardInfo.innerText = `${packaging.amount} for $${packaging.cost}`;
     packagingCardInfo.className = 'card-text';
     packagingCardBody.appendChild(packagingCardInfo);
+
+    const packagingCardInfoPer = document.createElement('h6');
+    packagingCardInfoPer.innerText = `$${(packaging.cost/packaging.amount).toFixed(2)} each`;
+    packagingCardInfoPer.className = 'card-text';
+    packagingCardBody.appendChild(packagingCardInfoPer);
 
     const cardFooter = document.createElement('div');
     cardFooter.className = 'card-footer';
